@@ -6,6 +6,17 @@
 const API_URL = "/api";
 
 /**
+ * En-têtes à joindre aux requêtes qui modifient des données (admin uniquement).
+ */
+function entetesAdmin() {
+  const token = sessionStorage.getItem("fistunia-admin-token");
+  return {
+    "Content-Type": "application/json",
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+}
+
+/**
  * Charge toutes les données depuis le backend.
  */
 async function chargerDonnees() {
@@ -33,7 +44,7 @@ function trouverEpisode(saison, episodeId) {
 async function ajouterSerie(donnees, { titre, synopsis, miniature, genres, affiche, type, videoUrl }) {
   const reponse = await fetch(`${API_URL}/series`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: entetesAdmin(),
     body: JSON.stringify({ titre, synopsis, miniature, genres, affiche, type, videoUrl }),
   });
   if (!reponse.ok) throw new Error("Erreur lors de l'ajout de la série");
@@ -46,7 +57,7 @@ async function ajouterSerie(donnees, { titre, synopsis, miniature, genres, affic
 async function modifierSerie(donnees, serieId, { titre, synopsis, miniature, genres, affiche, type, videoUrl }) {
   const reponse = await fetch(`${API_URL}/series/${serieId}`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
+    headers: entetesAdmin(),
     body: JSON.stringify({ titre, synopsis, miniature, genres, affiche, type, videoUrl }),
   });
   if (!reponse.ok) throw new Error("Erreur lors de la modification de la série");
@@ -68,7 +79,7 @@ async function modifierSerie(donnees, serieId, { titre, synopsis, miniature, gen
 async function modifierSaison(donnees, serieId, saisonId, { numero }) {
   const reponse = await fetch(`${API_URL}/series/${serieId}/saisons/${saisonId}`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
+    headers: entetesAdmin(),
     body: JSON.stringify({ numero }),
   });
   if (!reponse.ok) throw new Error("Erreur lors de la modification de la saison");
@@ -86,7 +97,7 @@ async function modifierSaison(donnees, serieId, saisonId, { numero }) {
 async function modifierEpisode(donnees, serieId, saisonId, episodeId, { numero, titre, videoUrl }) {
   const reponse = await fetch(`${API_URL}/series/${serieId}/saisons/${saisonId}/episodes/${episodeId}`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
+    headers: entetesAdmin(),
     body: JSON.stringify({ numero, titre, videoUrl }),
   });
   if (!reponse.ok) throw new Error("Erreur lors de la modification de l'épisode");
@@ -107,7 +118,7 @@ async function modifierEpisode(donnees, serieId, saisonId, episodeId, { numero, 
 async function ajouterSaison(donnees, serieId, { numero }) {
   const reponse = await fetch(`${API_URL}/series/${serieId}/saisons`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: entetesAdmin(),
     body: JSON.stringify({ numero }),
   });
   if (!reponse.ok) throw new Error("Erreur lors de l'ajout de la saison");
@@ -122,7 +133,7 @@ async function ajouterSaison(donnees, serieId, { numero }) {
 async function ajouterEpisode(donnees, serieId, saisonId, { numero, titre, videoUrl, embedCode, vromovId }) {
   const reponse = await fetch(`${API_URL}/series/${serieId}/saisons/${saisonId}/episodes`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: entetesAdmin(),
     body: JSON.stringify({ numero, titre, videoUrl: videoUrl ?? embedCode ?? vromovId }),
   });
   if (!reponse.ok) throw new Error("Erreur lors de l'ajout de l'épisode");
@@ -146,7 +157,7 @@ async function chargerCommentaires(episodeId) {
 async function ajouterCommentaire(episodeId, { pseudo, texte }) {
   const reponse = await fetch(`${API_URL}/episodes/${episodeId}/commentaires`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: entetesAdmin(),
     body: JSON.stringify({ pseudo, texte }),
   });
   if (!reponse.ok) throw new Error("Erreur lors de l'envoi du commentaire");
@@ -154,27 +165,27 @@ async function ajouterCommentaire(episodeId, { pseudo, texte }) {
 }
 
 async function supprimerCommentaire(commentaireId) {
-  const reponse = await fetch(`${API_URL}/commentaires/${commentaireId}`, { method: "DELETE" });
+  const reponse = await fetch(`${API_URL}/commentaires/${commentaireId}`, { method: "DELETE", headers: entetesAdmin() });
   if (!reponse.ok) throw new Error("Erreur lors de la suppression du commentaire");
 }
 
 /* ---------- Suppression (appellent l'API, mettent à jour l'objet local) ---------- */
 
 async function supprimerSerie(donnees, serieId) {
-  const reponse = await fetch(`${API_URL}/series/${serieId}`, { method: "DELETE" });
+  const reponse = await fetch(`${API_URL}/series/${serieId}`, { method: "DELETE", headers: entetesAdmin() });
   if (!reponse.ok) throw new Error("Erreur lors de la suppression de la série");
   donnees.series = donnees.series.filter((s) => s.id !== serieId);
 }
 
 async function supprimerSaison(donnees, serieId, saisonId) {
-  const reponse = await fetch(`${API_URL}/series/${serieId}/saisons/${saisonId}`, { method: "DELETE" });
+  const reponse = await fetch(`${API_URL}/series/${serieId}/saisons/${saisonId}`, { method: "DELETE", headers: entetesAdmin() });
   if (!reponse.ok) throw new Error("Erreur lors de la suppression de la saison");
   const serie = trouverSerie(donnees, serieId);
   serie.saisons = serie.saisons.filter((s) => s.id !== saisonId);
 }
 
 async function supprimerEpisode(donnees, serieId, saisonId, episodeId) {
-  const reponse = await fetch(`${API_URL}/series/${serieId}/saisons/${saisonId}/episodes/${episodeId}`, { method: "DELETE" });
+  const reponse = await fetch(`${API_URL}/series/${serieId}/saisons/${saisonId}/episodes/${episodeId}`, { method: "DELETE", headers: entetesAdmin() });
   if (!reponse.ok) throw new Error("Erreur lors de la suppression de l'épisode");
   const serie = trouverSerie(donnees, serieId);
   const saison = trouverSaison(serie, saisonId);

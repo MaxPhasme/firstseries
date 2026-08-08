@@ -8,8 +8,7 @@ let episodeEnEditionId = null;
 let episodeEnEditionSerieId = null;
 let episodeEnEditionSaisonId = null;
 
-const MOT_DE_PASSE_ADMIN = "Erwan170201";
-const CLÉ_AUTH_ADMIN = "fistunia-admin-auth";
+const CLÉ_AUTH_ADMIN = "fistunia-admin-token";
 const GENRES_PREDEFINIS = [
   "Action",
   "Aventure",
@@ -89,23 +88,35 @@ function initialiserAuthentification() {
   const motDePasseInput = document.getElementById("admin-password-input");
   const boutonLogout = document.getElementById("admin-logout");
 
-  const estAuthentifie = sessionStorage.getItem(CLÉ_AUTH_ADMIN) === "true";
+  const estAuthentifie = Boolean(sessionStorage.getItem(CLÉ_AUTH_ADMIN));
   afficherInterfaceAdmin(estAuthentifie);
 
   formulaire.addEventListener("submit", async (event) => {
     event.preventDefault();
 
-    if (motDePasseInput.value === MOT_DE_PASSE_ADMIN) {
-      sessionStorage.setItem(CLÉ_AUTH_ADMIN, "true");
+    try {
+      const reponse = await fetch("/api/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ motDePasse: motDePasseInput.value }),
+      });
+
+      if (!reponse.ok) {
+        erreur.textContent = "Mot de passe incorrect.";
+        motDePasseInput.focus();
+        return;
+      }
+
+      const { token } = await reponse.json();
+      sessionStorage.setItem(CLÉ_AUTH_ADMIN, token);
       erreur.textContent = "";
       afficherInterfaceAdmin(true);
       formulaire.reset();
       creerCheckboxGenres();
       donneesAdmin = await chargerDonnees();
       remplirSelectsSeries();
-    } else {
-      erreur.textContent = "Mot de passe incorrect.";
-      motDePasseInput.focus();
+    } catch (e) {
+      erreur.textContent = "Erreur de connexion au serveur.";
     }
   });
 
@@ -247,7 +258,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("commentaire-serie-select").addEventListener("change", remplirSelectCommentaireEpisodes);
   document.getElementById("commentaire-charger-btn").addEventListener("click", chargerCommentairesAdmin);
 
-  if (sessionStorage.getItem(CLÉ_AUTH_ADMIN) === "true") {
+  if (sessionStorage.getItem(CLÉ_AUTH_ADMIN)) {
     donneesAdmin = await chargerDonnees();
     remplirSelectsSeries();
     remplirSelectCommentaireSeries();
