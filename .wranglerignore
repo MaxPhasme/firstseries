@@ -1,0 +1,10 @@
+# Ignore node_modules and large binaries for Wrangler/Cloudflare
+node_modules/
+**/workerd/**
+**/workerd/bin/**
+.git/
+.vscode/
+*.log
+.DS_Store
+dist/
+build/
