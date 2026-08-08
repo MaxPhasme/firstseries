@@ -21,16 +21,37 @@ app.use(express.static(__dirname));
 
 let db;
 
-function initialiserFirebase() {
-  const serviceAccountPath = process.env.FIREBASE_SERVICE_ACCOUNT || path.join(__dirname, "firebase-service-account.json");
+function chargerServiceAccount() {
+  const rawServiceAccount =
+    process.env.FIREBASE_SERVICE_ACCOUNT_BASE64 ||
+    process.env.FIREBASE_SERVICE_ACCOUNT;
 
-  if (!process.env.FIREBASE_SERVICE_ACCOUNT && !fs.existsSync(serviceAccountPath)) {
-    throw new Error("Fichier de service account Firebase introuvable. Définissez FIREBASE_SERVICE_ACCOUNT ou ajoutez firebase-service-account.json.");
+  if (rawServiceAccount) {
+    try {
+      const json =
+        process.env.FIREBASE_SERVICE_ACCOUNT_BASE64
+          ? Buffer.from(rawServiceAccount, "base64").toString("utf8")
+          : rawServiceAccount;
+      return JSON.parse(json);
+    } catch (erreur) {
+      throw new Error(
+        `Impossible de parser le service account Firebase depuis les variables d'environnement: ${erreur.message}`
+      );
+    }
   }
 
-  const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT
-    ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)
-    : JSON.parse(fs.readFileSync(serviceAccountPath, "utf8"));
+  const serviceAccountPath = path.join(__dirname, "firebase-service-account.json");
+  if (!fs.existsSync(serviceAccountPath)) {
+    throw new Error(
+      "Fichier de service account Firebase introuvable. Définissez FIREBASE_SERVICE_ACCOUNT ou FIREBASE_SERVICE_ACCOUNT_BASE64, ou ajoutez firebase-service-account.json."
+    );
+  }
+
+  return JSON.parse(fs.readFileSync(serviceAccountPath, "utf8"));
+}
+
+function initialiserFirebase() {
+  const serviceAccount = chargerServiceAccount();
 
   if (!getApps().length) {
     initializeApp({

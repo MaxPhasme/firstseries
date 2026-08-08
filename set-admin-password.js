@@ -15,15 +15,29 @@ const SERVICE_ACCOUNT_PATH =
   process.env.FIREBASE_SERVICE_ACCOUNT || path.join(__dirname, "firebase-service-account.json");
 
 function chargerServiceAccount() {
-  if (process.env.FIREBASE_SERVICE_ACCOUNT) {
-    return JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+  const rawServiceAccount =
+    process.env.FIREBASE_SERVICE_ACCOUNT_BASE64 ||
+    process.env.FIREBASE_SERVICE_ACCOUNT;
+
+  if (rawServiceAccount) {
+    try {
+      const json =
+        process.env.FIREBASE_SERVICE_ACCOUNT_BASE64
+          ? Buffer.from(rawServiceAccount, "base64").toString("utf8")
+          : rawServiceAccount;
+      return JSON.parse(json);
+    } catch (erreur) {
+      throw new Error(
+        `Impossible de parser le service account Firebase depuis les variables d'environnement: ${erreur.message}`
+      );
+    }
   }
   if (!fs.existsSync(SERVICE_ACCOUNT_PATH)) {
     throw new Error("firebase-service-account.json introuvable à la racine du projet.");
   }
   const sa = JSON.parse(fs.readFileSync(SERVICE_ACCOUNT_PATH, "utf8"));
   if (!sa.private_key) {
-    throw new Error("firebase-service-account.json ne contient pas de vraie clé (private_key manquant).");
+    throw new Error("firebase-service-account.json ne contient pas de vraie clé (private_key manquant)." );
   }
   return sa;
 }
