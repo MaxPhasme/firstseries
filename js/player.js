@@ -7,37 +7,64 @@ async function chargerLecteur() {
   const serieId = params.get("serie");
   const saisonId = params.get("saison");
   const episodeId = params.get("episode");
+  const type = params.get("type");
 
   const container = document.getElementById("player-container");
   const episodeTitreEl = document.getElementById("episode-titre");
   const synopsisEl = document.getElementById("serie-synopsis-player");
   const retourEl = document.getElementById("retour-serie");
 
-  if (!serieId || !saisonId || !episodeId) {
-    episodeTitreEl.textContent = "Épisode introuvable";
+  if (!serieId) {
+    episodeTitreEl.textContent = "Contenu introuvable";
     return;
   }
 
   const donnees = await chargerDonnees();
   const serie = trouverSerie(donnees, serieId);
   if (!serie) {
-    episodeTitreEl.textContent = "Série introuvable";
+    episodeTitreEl.textContent = "Contenu introuvable";
     return;
   }
 
-  const saison = trouverSaison(serie, saisonId);
-  if (!saison) {
-    episodeTitreEl.textContent = "Saison introuvable";
+  const estFilm = type === "film" || (serie.type || "").toLowerCase() === "film";
+  let episode = null;
+  let saison = null;
+
+  if (!estFilm) {
+    if (!saisonId || !episodeId) {
+      episodeTitreEl.textContent = "Épisode introuvable";
+      return;
+    }
+
+    saison = trouverSaison(serie, saisonId);
+    if (!saison) {
+      episodeTitreEl.textContent = "Saison introuvable";
+      return;
+    }
+
+    episode = trouverEpisode(saison, episodeId);
+    if (!episode) {
+      episodeTitreEl.textContent = "Épisode introuvable";
+      return;
+    }
+  }
+
+  // Titre affiché : Nom de la série/film + numéro d'épisode si nécessaire
+  if (estFilm) {
+    episodeTitreEl.textContent = `${serie.titre}`;
+    synopsisEl.textContent = serie.synopsis;
+    retourEl.href = "index.html";
+    retourEl.textContent = "← Retour au catalogue";
+    const videoUrl = (serie.videoUrl || "").trim();
+    if (!videoUrl) {
+      container.innerHTML = "<p>Aucune URL vidéo disponible pour ce film.</p>";
+      return;
+    }
+    afficherLecteurVideo(videoUrl);
+    initCommentaires(serie.id);
     return;
   }
 
-  const episode = trouverEpisode(saison, episodeId);
-  if (!episode) {
-    episodeTitreEl.textContent = "Épisode introuvable";
-    return;
-  }
-
-  // Titre affiché : Nom de la série + numéro d'épisode + titre d'épisode
   episodeTitreEl.textContent = `${serie.titre} — S${saison.numero}E${episode.numero} — ${episode.titre}`;
   synopsisEl.textContent = serie.synopsis;
   retourEl.href = `serie.html?id=${encodeURIComponent(serie.id)}`;
@@ -52,8 +79,12 @@ async function chargerLecteur() {
   const embedCode = (episode.embedCode || "").trim();
   const vromovId = (episode.vromovId || "").trim();
 
-  if (videoUrl) {
-    // Si l'URL pointe vers un fichier vidéo direct, utiliser <video>.
+  function afficherLecteurVideo(videoUrl) {
+    if (!videoUrl) {
+      container.innerHTML = "<p>Aucune URL vidéo disponible.</p>";
+      return;
+    }
+
     const isDirectVideo = /\.(mp4|webm|ogg|m3u8)(\?.*)?$/i.test(videoUrl);
     if (isDirectVideo) {
       container.innerHTML = `
@@ -65,20 +96,21 @@ async function chargerLecteur() {
       return;
     }
 
-    // Sinon essayer d'embarquer la page via iframe (peut être bloqué par le site)
     container.innerHTML = `
       <iframe src="${videoUrl}" allowfullscreen class="embed-iframe"></iframe>
     `;
+  }
+
+  if (videoUrl) {
+    afficherLecteurVideo(videoUrl);
     return;
   }
 
-  // Anciennes données : support du code embed HTML
   if (embedCode) {
     container.innerHTML = embedCode;
     return;
   }
 
-  // Ancienne compatibilité Vromov
   if (vromovId) {
     const embedUrl = `https://vromov.com/embed/${encodeURIComponent(vromovId)}`;
     container.innerHTML = `

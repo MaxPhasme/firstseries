@@ -22,7 +22,7 @@ const GENRES_PREDEFINIS = [
   "Thriller",
 ];
 
-function créerCheckboxGenres() {
+function creerCheckboxGenres() {
   const groupe = document.getElementById("serie-genres-group");
   if (!groupe) return;
 
@@ -47,6 +47,22 @@ function appliquerGenresFormSerie(genres = []) {
   document.querySelectorAll("#serie-genres-group input[name='serie-genres']").forEach((input) => {
     input.checked = genres.includes(input.value);
   });
+}
+
+function actualiserChampVideoUrl(type) {
+  const champ = document.getElementById("serie-video-url-field");
+  const input = document.getElementById("serie-video-url-input");
+  if (!champ || !input) return;
+  const estFilm = type === "film";
+  champ.hidden = !estFilm;
+  input.required = estFilm;
+}
+
+function appliquerTypeFormSerie(type = "serie") {
+  document.querySelectorAll('input[name="serie-type"]').forEach((radio) => {
+    radio.checked = radio.value === type;
+  });
+  actualiserChampVideoUrl(type);
 }
 
 function afficherInterfaceAdmin(estAuthentifie) {
@@ -150,6 +166,8 @@ function remplirFormSerie(serie) {
   document.getElementById("serie-miniature-input").value = serie.miniature || "";
   appliquerGenresFormSerie(serie.genres || []);
   document.getElementById("serie-affiche-checkbox").checked = Boolean(serie.affiche);
+  appliquerTypeFormSerie((serie.type || "serie").toLowerCase());
+  document.getElementById("serie-video-url-input").value = serie.videoUrl || "";
 }
 
 function remplirFormSaison(saison, serieId) {
@@ -172,6 +190,8 @@ function remplirFormEpisode(episode, serieId, saisonId) {
 function resetFormSerie() {
   document.getElementById("form-serie").reset();
   appliquerGenresFormSerie([]);
+  appliquerTypeFormSerie("serie");
+  document.getElementById("serie-video-url-input").value = "";
   document.getElementById("serie-affiche-checkbox").checked = false;
   definirEtatEditionSerie(null);
 }
@@ -190,14 +210,15 @@ function resetFormEpisode() {
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
-  const estAuthentifie = initialiserAuthentification();
-  if (!estAuthentifie) return;
-
-  donneesAdmin = await chargerDonnees();
-
-  remplirSelectsSeries();
+  initialiserAuthentification();
 
   creerCheckboxGenres();
+  appliquerTypeFormSerie("serie");
+  document.querySelectorAll('input[name="serie-type"]').forEach((radio) => {
+    radio.addEventListener("change", (event) => {
+      actualiserChampVideoUrl(event.target.value);
+    });
+  });
   document.getElementById("form-serie").addEventListener("submit", onAjouterOuModifierSerie);
   document.getElementById("form-serie-annuler").addEventListener("click", resetFormSerie);
   document.getElementById("serie-charger-btn").addEventListener("click", chargerSeriePourModifier);
@@ -222,6 +243,15 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("contenu-supprimer-serie-btn").addEventListener("click", supprimerSerieSelectionnee);
   document.getElementById("contenu-supprimer-saison-btn").addEventListener("click", supprimerSaisonSelectionnee);
   document.getElementById("contenu-supprimer-episode-btn").addEventListener("click", supprimerEpisodeSelectionne);
+
+  document.getElementById("commentaire-serie-select").addEventListener("change", remplirSelectCommentaireEpisodes);
+  document.getElementById("commentaire-charger-btn").addEventListener("click", chargerCommentairesAdmin);
+
+  if (sessionStorage.getItem(CLÉ_AUTH_ADMIN) === "true") {
+    donneesAdmin = await chargerDonnees();
+    remplirSelectsSeries();
+    remplirSelectCommentaireSeries();
+  }
 });
 
 /* ---------- Remplissage des menus déroulants ---------- */
@@ -231,19 +261,129 @@ function remplirSelectsSeries() {
   const selectEpisode = document.getElementById("episode-serie-select");
   const selectContenuSerie = document.getElementById("contenu-serie-select");
   const selectSerieModifier = document.getElementById("serie-modifier-select");
+  const series = Array.isArray(donneesAdmin?.series) ? donneesAdmin.series : [];
 
-  const optionsHtml = donneesAdmin.series
+  if (series.length === 0) {
+    const placeholder = "<option value=\"\" disabled selected>Aucune série</option>";
+    selectSaison.innerHTML = placeholder;
+    selectEpisode.innerHTML = placeholder;
+    selectContenuSerie.innerHTML = placeholder;
+    selectSerieModifier.innerHTML = placeholder;
+    return;
+  }
+
+  const optionsHtml = series
     .map((s) => `<option value="${s.id}">${s.titre}</option>`)
     .join("");
+  const placeholder = "<option value=\"\" disabled selected>Choisis une série</option>";
 
-  selectSaison.innerHTML = optionsHtml || "<option disabled>Aucune série</option>";
-  selectEpisode.innerHTML = optionsHtml || "<option disabled>Aucune série</option>";
-  selectContenuSerie.innerHTML = optionsHtml || "<option disabled>Aucune série</option>";
-  selectSerieModifier.innerHTML = optionsHtml || "<option disabled>Aucune série</option>";
+  selectSaison.innerHTML = placeholder + optionsHtml;
+  selectEpisode.innerHTML = placeholder + optionsHtml;
+  selectContenuSerie.innerHTML = placeholder + optionsHtml;
+  selectSerieModifier.innerHTML = placeholder + optionsHtml;
+  remplirSelectCommentaireSeries();
 
   remplirSelectSaisons();
   remplirSelectSaisonsPourSelectSerie("contenu-serie-select", "contenu-saison-select");
   remplirSelectEpisodesPourContenu();
+}
+
+function remplirSelectCommentaireSeries() {
+  const selectCommentaireSerie = document.getElementById("commentaire-serie-select");
+  if (!selectCommentaireSerie) return;
+
+  const series = Array.isArray(donneesAdmin?.series) ? donneesAdmin.series : [];
+  if (series.length === 0) {
+    selectCommentaireSerie.innerHTML = "<option value=\"\" disabled selected>Aucune série</option>";
+    return;
+  }
+
+  const optionsHtml = series.map((s) => `<option value="${s.id}">${s.titre}</option>`).join("");
+  selectCommentaireSerie.innerHTML = "<option value=\"\" disabled selected>Choisis une série</option>" + optionsHtml;
+  remplirSelectCommentaireEpisodes();
+}
+
+function remplirSelectCommentaireEpisodes() {
+  const selectCommentaireEpisode = document.getElementById("commentaire-episode-select");
+  const selectCommentaireSerie = document.getElementById("commentaire-serie-select");
+  if (!selectCommentaireEpisode || !selectCommentaireSerie) return;
+
+  const serieId = selectCommentaireSerie.value;
+  const serie = trouverSerie(donneesAdmin, serieId);
+
+  if (!serie || !Array.isArray(serie.saisons) || serie.saisons.length === 0 || serie.type === "film") {
+    selectCommentaireEpisode.innerHTML = "<option value=\"\" disabled selected>Aucun épisode</option>";
+    selectCommentaireEpisode.disabled = true;
+    return;
+  }
+
+  const optionsHtml = serie.saisons
+    .flatMap((s) => (s.episodes || []).map((episode) => `<option value="${episode.id}">S${s.numero}E${episode.numero} — ${episode.titre}</option>`))
+    .join("");
+  selectCommentaireEpisode.disabled = false;
+  selectCommentaireEpisode.innerHTML = "<option value=\"\" disabled selected>Choisis un épisode</option>" + optionsHtml;
+}
+
+async function chargerCommentairesAdmin() {
+  const selectCommentaireSerie = document.getElementById("commentaire-serie-select");
+  const selectCommentaireEpisode = document.getElementById("commentaire-episode-select");
+  const info = document.getElementById("commentaire-selection-info");
+  const listeEl = document.getElementById("commentaires-admin-list");
+
+  if (!selectCommentaireSerie || !listeEl || !info) return;
+
+  const serie = trouverSerie(donneesAdmin, selectCommentaireSerie.value);
+  if (!serie) {
+    info.textContent = "Choisis une série valide pour charger les commentaires.";
+    return;
+  }
+
+  let commentaireId = serie.id;
+  if (serie.type !== "film" && selectCommentaireEpisode && selectCommentaireEpisode.value) {
+    commentaireId = selectCommentaireEpisode.value;
+  }
+
+  const commentaires = Array.isArray(donneesAdmin.commentaires)
+    ? donneesAdmin.commentaires.filter((c) => c.episodeId === commentaireId)
+    : [];
+
+  listeEl.innerHTML = "";
+  if (commentaires.length === 0) {
+    listeEl.innerHTML = '<p class="admin-help-text">Aucun commentaire trouvé pour ce contenu.</p>';
+    return;
+  }
+
+  commentaires.forEach((commentaire) => {
+    const bloc = document.createElement("div");
+    bloc.className = "admin-commentaire-item";
+
+    const meta = document.createElement("div");
+    meta.className = "admin-commentaire-meta";
+    meta.textContent = `${commentaire.pseudo} — ${new Date(commentaire.date).toLocaleString("fr-FR")}`;
+
+    const texte = document.createElement("p");
+    texte.className = "admin-commentaire-texte";
+    texte.textContent = commentaire.texte;
+
+    const supprimer = document.createElement("button");
+    supprimer.type = "button";
+    supprimer.className = "btn-supprimer btn-small";
+    supprimer.textContent = "Supprimer";
+    supprimer.addEventListener("click", async () => {
+      if (!confirm("Supprimer ce commentaire ?")) return;
+      try {
+        await supprimerCommentaire(commentaire.id);
+        donneesAdmin = await chargerDonnees();
+        await chargerCommentairesAdmin();
+      } catch (erreur) {
+        console.error(erreur);
+        alert("Impossible de supprimer le commentaire.");
+      }
+    });
+
+    bloc.append(meta, texte, supprimer);
+    listeEl.appendChild(bloc);
+  });
 }
 
 function remplirSelectSaisons() {
@@ -258,14 +398,15 @@ function remplirSelectSaisonsPourSelectSerie(serieSelectId, saisonSelectId) {
   const selectSaison = document.getElementById(saisonSelectId);
   const serie = trouverSerie(donneesAdmin, serieId);
 
-  if (!serie || !serie.saisons || serie.saisons.length === 0) {
-    selectSaison.innerHTML = "<option disabled>Aucune saison</option>";
+  if (!serie || !Array.isArray(serie.saisons) || serie.saisons.length === 0) {
+    selectSaison.innerHTML = "<option value=\"\" disabled selected>Aucune saison</option>";
     return;
   }
 
-  selectSaison.innerHTML = serie.saisons
+  const optionsHtml = serie.saisons
     .map((s) => `<option value="${s.id}">Saison ${s.numero}</option>`)
     .join("");
+  selectSaison.innerHTML = "<option value=\"\" disabled selected>Choisis une saison</option>" + optionsHtml;
 }
 
 function remplirSelectEpisodesPourContenu() {
@@ -275,19 +416,20 @@ function remplirSelectEpisodesPourContenu() {
   const serie = trouverSerie(donneesAdmin, serieId);
 
   if (!serie) {
-    selectEpisode.innerHTML = "<option disabled>Aucun épisode</option>";
+    selectEpisode.innerHTML = "<option value=\"\" disabled selected>Aucun épisode</option>";
     return;
   }
 
   const saison = serie.saisons.find((s) => s.id === saisonId) || serie.saisons[0];
-  if (!saison || !saison.episodes || saison.episodes.length === 0) {
-    selectEpisode.innerHTML = "<option disabled>Aucun épisode</option>";
+  if (!saison || !Array.isArray(saison.episodes) || saison.episodes.length === 0) {
+    selectEpisode.innerHTML = "<option value=\"\" disabled selected>Aucun épisode</option>";
     return;
   }
 
-  selectEpisode.innerHTML = saison.episodes
+  const optionsHtml = saison.episodes
     .map((episode) => `<option value="${episode.id}">E${episode.numero} — ${episode.titre}</option>`)
     .join("");
+  selectEpisode.innerHTML = "<option value=\"\" disabled selected>Choisis un épisode</option>" + optionsHtml;
 }
 
 /* ---------- Ajouts ---------- */
@@ -300,12 +442,20 @@ async function onAjouterOuModifierSerie(e) {
   const miniature = document.getElementById("serie-miniature-input").value;
   const genres = lireGenresFormSerie();
   const affiche = document.getElementById("serie-affiche-checkbox").checked;
+  const type = (document.querySelector('input[name="serie-type"]:checked')?.value || "serie").toLowerCase();
+  const videoUrl = document.getElementById("serie-video-url-input").value.trim();
+
+  if (type === "film" && !videoUrl) {
+    alert("Pour un film, ajoute une URL vidéo valide avant de sauvegarder.");
+    document.getElementById("serie-video-url-input").focus();
+    return;
+  }
 
   try {
     if (serieEnEditionId) {
-      await modifierSerie(donneesAdmin, serieEnEditionId, { titre, synopsis, miniature, genres, affiche });
+      await modifierSerie(donneesAdmin, serieEnEditionId, { titre, synopsis, miniature, genres, affiche, type, videoUrl });
     } else {
-      await ajouterSerie(donneesAdmin, { titre, synopsis, miniature, genres, affiche });
+      await ajouterSerie(donneesAdmin, { titre, synopsis, miniature, genres, affiche, type, videoUrl });
     }
 
     resetFormSerie();

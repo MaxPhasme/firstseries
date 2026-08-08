@@ -12,24 +12,28 @@
     <a href="index.html" class="logo">FirstSeries<span>.io</span></a>
 
     <div class="header-center">
-      <div class="genre-select-wrapper">
-        <label for="genre-select">Genre</label>
-        <select id="genre-select">
-          <option value="">Tous les genres</option>
-          <option value="action">Action</option>
-          <option value="aventure">Aventure</option>
-          <option value="comedie">Comédie</option>
-          <option value="drame">Drame</option>
-          <option value="fantastique">Fantastique</option>
-          <option value="horreur">Horreur</option>
-          <option value="policier">Policier</option>
-          <option value="science-fiction">Science-Fiction</option>
-          <option value="thriller">Thriller</option>
-        </select>
+      <div class="genre-filter-section">
+        <div class="genre-dropdown">
+          <button id="genre-dropdown-button" type="button" class="genre-dropdown-btn" aria-label="Sélectionner un genre">
+            Genre
+          </button>
+          <div class="genre-dropdown-panel">
+            <div id="genre-filter-list" class="genre-filter-list">Chargement des genres…</div>
+            <div class="genre-dropdown-actions">
+              <button id="clear-genre-filters" type="button" class="filter-chip filter-clear">Voir tout</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="type-filter-section">
+        <button id="filter-all" type="button" class="filter-chip active">Tous</button>
+        <button id="filter-series" type="button" class="filter-chip">Séries</button>
+        <button id="filter-films" type="button" class="filter-chip">Films</button>
       </div>
     </div>
 
-    <input type="text" id="search-bar" placeholder="Rechercher une série...">
+    <input type="text" id="search-bar" placeholder="Rechercher un contenu...">
   </header>
 
   <main>
@@ -45,7 +49,7 @@
 
     <!-- Catalogue -->
     <div class="catalogue-section">
-      <h2 class="section-title">Toutes les séries</h2>
+      <h2 class="section-title">Tous les contenus</h2>
       <div id="serie-grid" class="video-grid">
         <p id="loading-msg">Chargement du catalogue...</p>
       </div>

@@ -26,6 +26,8 @@ async function chargerFicheSerie() {
   }
 
   serieActuelle = serie;
+  const estFilm = (serie.type || "").toLowerCase() === "film"
+    || ((!serie.saisons || serie.saisons.length === 0) && (serie.videoUrl || "").trim() !== "");
 
   titreEl.textContent = serie.titre;
   document.getElementById("serie-genres").textContent = (serie.genres || []).join(" • ");
@@ -35,31 +37,41 @@ async function chargerFicheSerie() {
     : "assets/placeholder.jpg";
   afficheEl.alt = serie.titre;
 
-  afficherOngletsSaisons(serie);
-  mettreAJourBoutonsSerie(serie);
+  afficherOngletsSaisons(serie, estFilm);
+  mettreAJourBoutonsSerie(serie, estFilm);
 }
 
-function mettreAJourBoutonsSerie(serie) {
+function mettreAJourBoutonsSerie(serie, estFilm = false) {
   const btnPlay = document.getElementById("btn-play-premier-episode");
   const btnShare = document.getElementById("btn-share-serie");
-  const premier = obtenirPremierEpisode(serie);
 
-  if (!btnPlay || !btnShare || !premier) {
-    if (btnPlay) btnPlay.disabled = true;
-    if (btnShare) btnShare.disabled = true;
-    return;
+  if (!btnPlay || !btnShare) return;
+
+  btnPlay.textContent = estFilm ? "Lire le film" : "Lire le premier épisode";
+  if (estFilm) {
+    if (!serie.videoUrl || serie.videoUrl.trim() === "") {
+      btnPlay.disabled = true;
+    } else {
+      btnPlay.disabled = false;
+      btnPlay.addEventListener("click", () => {
+        window.location.href = buildVideoUrl(serie.id, null, null, "film");
+      });
+    }
+  } else {
+    const premier = obtenirPremierEpisode(serie);
+    btnPlay.disabled = !premier;
+    if (premier) {
+      btnPlay.addEventListener("click", () => {
+        window.location.href = buildVideoUrl(serie.id, premier.saison.id, premier.episode.id);
+      });
+    }
   }
-
-  btnPlay.disabled = false;
-  btnPlay.addEventListener("click", () => {
-    window.location.href = buildVideoUrl(serie.id, premier.saison.id, premier.episode.id);
-  });
 
   btnShare.disabled = false;
   btnShare.addEventListener("click", async () => {
     const url = `${window.location.origin}${window.location.pathname}?id=${encodeURIComponent(serie.id)}`;
     const title = `Regarde ${serie.titre} sur FirstSeries.io`;
-    const text = `Découvre la série ${serie.titre} sur FirstSeries.io.`;
+    const text = `Découvre ${(serie.type || "").toLowerCase() === "film" ? "le film" : "la série"} ${serie.titre} sur FirstSeries.io.`;
 
     if (navigator.share) {
       navigator.share({ title, text, url }).catch(() => {});
@@ -69,14 +81,14 @@ function mettreAJourBoutonsSerie(serie) {
     if (navigator.clipboard && navigator.clipboard.writeText) {
       try {
         await navigator.clipboard.writeText(url);
-        alert("Lien de la série copié dans le presse-papiers.");
+        alert("Lien copié dans le presse-papiers.");
         return;
       } catch (error) {
         // fallback vers prompt
       }
     }
 
-    prompt("Copie ce lien pour partager la série :", url);
+    prompt("Copie ce lien pour partager le contenu :", url);
   });
 }
 
@@ -94,16 +106,22 @@ function obtenirPremierEpisode(serie) {
   return { saison: premiereSaison, episode: premierEpisode };
 }
 
-function buildVideoUrl(serieId, saisonId, episodeId) {
-  return `video.html?serie=${encodeURIComponent(serieId)}&saison=${encodeURIComponent(saisonId)}&episode=${encodeURIComponent(episodeId)}`;
+function buildVideoUrl(serieId, saisonId, episodeId, type) {
+  let url = `video.html?serie=${encodeURIComponent(serieId)}`;
+  if (type === "film") return `${url}&type=film`;
+  return `${url}&saison=${encodeURIComponent(saisonId)}&episode=${encodeURIComponent(episodeId)}`;
 }
 
-function afficherOngletsSaisons(serie) {
+function afficherOngletsSaisons(serie, estFilm = false) {
   const tabsEl = document.getElementById("saisons-tabs");
   tabsEl.innerHTML = "";
 
-  if (serie.saisons.length === 0) {
-    tabsEl.innerHTML = "";
+  if (estFilm) {
+    document.getElementById("episodes-list").innerHTML = "<p>Film disponible.</p>";
+    return;
+  }
+
+  if (!serie.saisons || serie.saisons.length === 0) {
     document.getElementById("episodes-list").innerHTML = "<p>Aucun épisode pour le moment.</p>";
     return;
   }

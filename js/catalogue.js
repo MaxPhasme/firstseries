@@ -1,8 +1,9 @@
 // catalogue.js
-// Affiche la liste des séries sur index.html
+// Affiche la liste des contenus (séries et films) sur index.html
 
 let genresDisponibles = [];
 let filtreGenreActif = null;
+let filtreTypeActif = null;
 let filtreAfficheActif = false;
 let termeRecherche = "";
 
@@ -16,12 +17,13 @@ async function chargerCatalogue() {
     if (loadingMsg) loadingMsg.remove();
 
     if (!donnees.series || donnees.series.length === 0) {
-      grid.innerHTML = "<p>Aucune série pour le moment.</p>";
+      grid.innerHTML = "<p>Aucun contenu pour le moment.</p>";
       return;
     }
 
     genresDisponibles = extraireGenres(donnees.series);
     construireFiltresGenres();
+    construireFiltresType();
 
     donnees.series.forEach((serie) => {
       grid.appendChild(creerCarteSerie(serie));
@@ -42,17 +44,34 @@ function extraireGenres(series) {
   ).sort();
 }
 
+const GENRE_ICONS = {
+  Action: "⚔️",
+  Aventure: "🧭",
+  Comédie: "😂",
+  Drame: "🎭",
+  Fantastique: "🪄",
+  Horreur: "👻",
+  Policier: "🕵️",
+  "Science-Fiction": "🚀",
+  Thriller: "🔪",
+};
+
 function construireFiltresGenres() {
   const filtreList = document.getElementById("genre-filter-list");
-  const filtreFeatured = document.getElementById("featured-filter");
   const clearFilters = document.getElementById("clear-genre-filters");
 
-  if (!filtreList || !filtreFeatured || !clearFilters) return;
+  if (!filtreList || !clearFilters) return;
 
   filtreList.innerHTML = genresDisponibles
-    .map(
-      (genre) => `<button type="button" class="filter-chip" data-genre="${genre}">${genre}</button>`
-    )
+    .map((genre) => {
+      const icon = GENRE_ICONS[genre] || "🎬";
+      return `
+        <button type="button" class="filter-chip" data-genre="${genre}">
+          <span class="filter-chip-icon">${icon}</span>
+          <span>${genre}</span>
+        </button>
+      `;
+    })
     .join("");
 
   filtreList.querySelectorAll("button[data-genre]").forEach((bouton) => {
@@ -64,21 +83,39 @@ function construireFiltresGenres() {
     });
   });
 
-  filtreFeatured.addEventListener("click", () => {
-    filtreAfficheActif = !filtreAfficheActif;
-    if (filtreAfficheActif) {
-      filtreGenreActif = null;
-    }
-    mettreAJourChips();
-    appliquerFiltresCatalogue();
-  });
-
   clearFilters.addEventListener("click", () => {
     filtreGenreActif = null;
+    filtreTypeActif = null;
     filtreAfficheActif = false;
     termeRecherche = "";
     const searchBar = document.getElementById("search-bar");
     if (searchBar) searchBar.value = "";
+    mettreAJourChips();
+    appliquerFiltresCatalogue();
+  });
+}
+
+function construireFiltresType() {
+  const boutonTous = document.getElementById("filter-all");
+  const boutonSeries = document.getElementById("filter-series");
+  const boutonFilms = document.getElementById("filter-films");
+
+  if (!boutonTous || !boutonSeries || !boutonFilms) return;
+
+  boutonTous.addEventListener("click", () => {
+    filtreTypeActif = null;
+    mettreAJourChips();
+    appliquerFiltresCatalogue();
+  });
+
+  boutonSeries.addEventListener("click", () => {
+    filtreTypeActif = "serie";
+    mettreAJourChips();
+    appliquerFiltresCatalogue();
+  });
+
+  boutonFilms.addEventListener("click", () => {
+    filtreTypeActif = "film";
     mettreAJourChips();
     appliquerFiltresCatalogue();
   });
@@ -93,6 +130,15 @@ function mettreAJourChips() {
   if (filtreFeatured) {
     filtreFeatured.classList.toggle("active", filtreAfficheActif);
   }
+
+  const filtreTous = document.getElementById("filter-all");
+  const filtreSeries = document.getElementById("filter-series");
+  const filtreFilms = document.getElementById("filter-films");
+  if (filtreTous && filtreSeries && filtreFilms) {
+    filtreTous.classList.toggle("active", filtreTypeActif === null);
+    filtreSeries.classList.toggle("active", filtreTypeActif === "serie");
+    filtreFilms.classList.toggle("active", filtreTypeActif === "film");
+  }
 }
 
 function appliquerFiltresCatalogue() {
@@ -100,12 +146,14 @@ function appliquerFiltresCatalogue() {
     const titre = carte.dataset.titre || "";
     const genres = (carte.dataset.genres || "").split("|").filter(Boolean);
     const affiche = carte.dataset.affiche === "true";
+    const type = carte.dataset.type || "serie";
 
     const termesOk = termeRecherche === "" || titre.includes(termeRecherche.toLowerCase());
     const genreOk = !filtreGenreActif || genres.includes(filtreGenreActif);
+    const typeOk = !filtreTypeActif || type === filtreTypeActif;
     const afficheOk = !filtreAfficheActif || affiche;
 
-    carte.style.display = termesOk && genreOk && afficheOk ? "" : "none";
+    carte.style.display = termesOk && genreOk && typeOk && afficheOk ? "" : "none";
   });
 }
 
@@ -115,29 +163,36 @@ function appliquerRechercheCatalogue(terme) {
 }
 
 function creerCarteSerie(serie) {
+  const isFilm = serie.type === "film" || (!serie.saisons?.length && (serie.videoUrl || "").trim() !== "");
+
   const carte = document.createElement("div");
   carte.className = "video-card";
   carte.addEventListener("click", () => {
-    window.location.href = `serie.html?id=${encodeURIComponent(serie.id)}`;
+    const targetUrl = isFilm
+      ? `video.html?serie=${encodeURIComponent(serie.id)}&type=film`
+      : `serie.html?id=${encodeURIComponent(serie.id)}`;
+    window.location.href = targetUrl;
   });
 
   const miniature = serie.miniature && serie.miniature.trim() !== ""
     ? serie.miniature
     : "assets/placeholder.jpg";
-
-  const nbSaisons = serie.saisons.length;
+  const metaText = isFilm
+    ? "Film"
+    : `${serie.saisons?.length || 0} saison${serie.saisons?.length > 1 ? "s" : ""}`;
 
   carte.innerHTML = `
     <img src="${miniature}" alt="${serie.titre}">
     <div class="video-info">
       <h3>${serie.titre}</h3>
       <div class="genre-tags">${(serie.genres || []).map((genre) => `<span>${genre}</span>`).join("")}</div>
-      <span class="meta-saisons">${nbSaisons} saison${nbSaisons > 1 ? "s" : ""}</span>
+      <span class="meta-saisons">${metaText}</span>
     </div>
   `;
   carte.dataset.titre = serie.titre.toLowerCase();
   carte.dataset.genres = (serie.genres || []).join("|");
   carte.dataset.affiche = String(Boolean(serie.affiche));
+  carte.dataset.type = serie.type || "serie";
 
   return carte;
 }
@@ -164,7 +219,10 @@ async function initialiserHeroSlider() {
       slide.className = `hero-slide ${index === 0 ? "active" : ""}`;
       slide.style.backgroundImage = `url('${miniature}')`;
       slide.addEventListener("click", () => {
-        window.location.href = `serie.html?id=${encodeURIComponent(serie.id)}`;
+        const targetUrl = (serie.type || "").toLowerCase() === "film"
+          ? `video.html?serie=${encodeURIComponent(serie.id)}&type=film`
+          : `serie.html?id=${encodeURIComponent(serie.id)}`;
+        window.location.href = targetUrl;
       });
 
       const nbSaisons = serie.saisons.length;

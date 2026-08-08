@@ -32,9 +32,9 @@
 
   <main class="admin-main" id="admin-main">
 
-    <!-- Ajouter une série -->
+    <!-- Ajouter un contenu -->
     <section class="admin-panel">
-      <h2>Ajouter / modifier une série</h2>
+      <h2>Ajouter / modifier un contenu</h2>
       <div class="admin-selector-group">
         <label for="serie-modifier-select">Série à modifier</label>
         <div class="admin-selector-actions">
@@ -53,6 +53,22 @@
         <label>URL de la miniature (optionnel)
           <input type="text" id="serie-miniature-input">
         </label>
+        <fieldset class="form-fieldset">
+          <legend>Type de contenu</legend>
+          <label class="radio-label">
+            <input type="radio" name="serie-type" value="serie" checked>
+            Série
+          </label>
+          <label class="radio-label">
+            <input type="radio" name="serie-type" value="film">
+            Film
+          </label>
+        </fieldset>
+        <div id="serie-video-url-field" hidden>
+          <label>URL de la vidéo
+            <input type="url" id="serie-video-url-input" placeholder="https://...">
+          </label>
+        </div>
         <fieldset class="form-fieldset">
           <legend>Genres</legend>
           <div id="serie-genres-group" class="genres-group"></div>
@@ -135,6 +151,23 @@
         </div>
         <p id="contenu-selection-info" class="admin-help-text">Choisis une série, puis une saison, puis un épisode à modifier.</p>
       </div>
+    </section>
+
+    <section class="admin-panel admin-panel-large">
+      <h2>Commentaires</h2>
+      <div class="admin-content-selector">
+        <label>Série
+          <select id="commentaire-serie-select"></select>
+        </label>
+        <label>Épisode
+          <select id="commentaire-episode-select"></select>
+        </label>
+        <div class="form-actions">
+          <button type="button" id="commentaire-charger-btn">Charger les commentaires</button>
+        </div>
+        <p id="commentaire-selection-info" class="admin-help-text">Choisis une série et un épisode ou laisse l’épisode vide pour les films.</p>
+      </div>
+      <div id="commentaires-admin-list" class="admin-commentaires-list"></div>
     </section>
 
   </main>
