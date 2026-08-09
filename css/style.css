@@ -1367,7 +1367,82 @@ body {
 }
 
 /* Compte utilisateur Firebase */
-.site-header .user-menu { flex: 0 0 auto; }
-@media (max-width: 760px) {
+.site-header .user-menu {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  min-width: 180px;
+  margin-left: 1rem;
+}
+.site-header .user-menu-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.55rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color 0.25s ease, background 0.25s ease, transform 0.25s ease;
+}
+.site-header .user-menu-button:hover {
+  background: rgba(236, 72, 153, 0.14);
+  border-color: rgba(236, 72, 153, 0.4);
+  transform: translateY(-1px);
+}
+.site-header .user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, rgba(236, 72, 153, 0.9), rgba(255, 120, 180, 0.85));
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+.site-header .user-name {
+  max-width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+.site-header .user-menu-panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 10px);
+  min-width: 220px;
+  padding: 0.9rem;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(10, 10, 15, 0.95);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 22px 48px rgba(0, 0, 0, 0.45);
+  z-index: 15;
+}
+.site-header .user-menu-email {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  margin-bottom: 0.85rem;
+  word-break: break-word;
+}
+.site-header .user-menu-panel button {
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 0.9rem;
+  background: rgba(236, 72, 153, 0.1);
+  color: var(--text);
+}
+.site-header .user-menu-panel button:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+@media (max-width: 900px) {
   .site-header .user-menu .user-name { display: none; }
 }

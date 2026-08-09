@@ -232,7 +232,7 @@ app.get("/api/data", async (req, res) => {
   try {
     res.json(await lireDonnees());
   } catch (erreur) {
-    console.error(erreur);
+    console.error("/api/data error:", erreur);
     res.status(500).json({ erreur: "Impossible de charger les données" });
   }
 });
