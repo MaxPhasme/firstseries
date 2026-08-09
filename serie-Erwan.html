@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Série — FirstSeries.io</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <header class="site-header">
+    <a href="index.html" class="logo">FirstSeries<span>.io</span></a>
+  </header>
+
+  <main>
+    <div class="serie-fiche">
+      <img id="serie-affiche" src="" alt="">
+      <div class="serie-infos">
+        <h1 id="serie-titre">Chargement...</h1>
+        <p id="serie-genres" class="serie-genres"></p>
+        <p id="serie-synopsis"></p>
+        <div class="serie-actions">
+          <button id="btn-play-premier-episode" class="action-button" type="button">Lire le premier épisode</button>
+          <button id="btn-share-serie" class="action-button secondary" type="button">Partager la série</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="saisons-tabs" id="saisons-tabs"></div>
+    <div class="episodes-list" id="episodes-list"></div>
+  </main>
+
+  <footer class="site-footer">
+    <p>ALPHA | FirstSeries.io | by Le Maxi Phasme</p>
+  </footer>
+
+  <script src="js/data.js"></script>
+  <script src="js/serie.js"></script>
+</body>
+</html>

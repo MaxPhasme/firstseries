@@ -1,0 +1,302 @@
+/* admin.css */
+
+.admin-badge {
+  background: var(--accent);
+  color: white;
+  font-size: 0.65rem;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  vertical-align: middle;
+  margin-left: 0.5rem;
+}
+
+.admin-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.admin-link-btn,
+.admin-logout {
+  border: none;
+  border-radius: 8px;
+  padding: 0.45rem 0.8rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+  text-decoration: none;
+}
+
+.admin-link-btn {
+  background: var(--accent);
+  color: white;
+}
+
+.admin-logout {
+  background: #2f2f38;
+  color: #ddd;
+}
+
+.admin-auth {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 2rem;
+  background: rgba(6, 8, 14, 0.75);
+  backdrop-filter: blur(6px);
+}
+
+.admin-auth-card {
+  width: min(100%, 420px);
+  background: var(--bg-card);
+  border: 1px solid #2a2a33;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.35);
+}
+
+.admin-auth-card h2 {
+  margin-bottom: 0.5rem;
+  font-size: 1.2rem;
+}
+
+.admin-auth-card p {
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+}
+
+.admin-auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.admin-auth-form label {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.admin-auth-form input {
+  background: var(--bg);
+  border: 1px solid #2a2a33;
+  color: var(--text);
+  padding: 0.6rem 0.8rem;
+  border-radius: 6px;
+}
+
+.admin-auth-form button {
+  border: none;
+  border-radius: 8px;
+  padding: 0.7rem 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--accent);
+  color: white;
+}
+
+.admin-auth-error {
+  min-height: 1.2rem;
+  color: #ff8f8f;
+  font-size: 0.9rem;
+}
+
+.admin-main {
+  padding: 2rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.5rem;
+  align-items: start;
+  transition: filter 0.2s ease;
+}
+
+.admin-main.blurred {
+  filter: blur(4px);
+  pointer-events: none;
+  user-select: none;
+}
+
+.admin-panel {
+  background: var(--bg-card);
+  border: 1px solid #2a2a33;
+  border-radius: 8px;
+  padding: 1.2rem;
+}
+
+.admin-panel h2 {
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+}
+
+.admin-panel-large {
+  grid-column: 1 / -1;
+}
+
+.admin-panel form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.admin-panel label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--text);
+}
+
+.genres-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 0.6rem;
+}
+
+.admin-panel input,
+.admin-panel select,
+.admin-panel textarea {
+  background: var(--bg);
+  border: 1px solid #2a2a33;
+  color: var(--text);
+  padding: 0.5rem 0.7rem;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 0.9rem;
+}
+
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.admin-panel button {
+  border: none;
+  border-radius: 8px;
+  padding: 0.65rem 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+}
+
+.admin-panel button:hover {
+  transform: translateY(-1px);
+}
+
+.admin-panel button[type="submit"] {
+  background: var(--accent);
+  color: white;
+}
+
+.admin-panel button[type="submit"]:hover {
+  opacity: 0.95;
+}
+
+.admin-panel .btn-cancel {
+  background: #2f2f38;
+  color: #ddd;
+  border: 1px solid #444;
+}
+
+.admin-panel .btn-edit,
+.admin-panel .btn-modifier {
+  background: #4b6de0;
+  color: white;
+  border: 1px solid #3c5bcc;
+}
+
+.admin-selector-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin-bottom: 1rem;
+}
+
+.admin-selector-group label {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.admin-selector-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.admin-selector-actions select {
+  min-width: 220px;
+  flex: 1;
+}
+
+.admin-help-text {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.btn-secondary {
+  background: #2f2f38;
+  color: #ddd;
+  border: 1px solid #444;
+}
+
+.btn-secondary:hover {
+  background: #3d3d49;
+}
+
+.admin-panel .btn-edit:hover,
+.admin-panel .btn-modifier:hover {
+  background: #3c5bcc;
+}
+
+.btn-supprimer {
+  background: #341a1f;
+  border: 1px solid #7c3339;
+  color: #f8b4b4;
+  padding: 0.35rem 0.7rem;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 0.78rem;
+}
+
+.btn-supprimer:hover {
+  background: #5d2d2f;
+}
+
+/* --- Arbre de contenu ---
+*/
+.arbre-ligne {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0.7rem;
+  border-radius: 6px;
+  margin-bottom: 0.3rem;
+  font-size: 0.88rem;
+}
+
+.arbre-ligne-serie {
+  background: #232330;
+  font-weight: 600;
+}
+
+.arbre-ligne-saison {
+  background: #1e1e27;
+  margin-left: 1rem;
+  color: var(--text-muted);
+}
+
+.arbre-ligne-episode {
+  background: var(--bg);
+  margin-left: 2rem;
+}

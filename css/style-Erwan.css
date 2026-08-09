@@ -160,7 +160,7 @@ main {
 }
 
 .video-card:focus-visible,
-.hero-slide:focus-visible,
+.hero-item:focus-visible,
 button:focus-visible,
 input:focus-visible {
   outline: 3px solid var(--accent);
@@ -169,7 +169,7 @@ input:focus-visible {
 
 .video-card img {
   width: 100%;
-  aspect-ratio: 16/9;
+  aspect-ratio: 9/16;
   object-fit: cover;
   background: #0A0A0F;
 }
@@ -183,73 +183,146 @@ input:focus-visible {
   font-weight: 500;
 }
 
-/* --- Hero Slider --- */
+/* --- Hero Carousel (coverflow 9/16) --- */
 .hero-slider {
-  position: relative;
   width: 100%;
-  height: 500px;
   margin-bottom: 3rem;
-  overflow: hidden;
-  border-radius: 24px;
-  z-index: 1;
 }
 
-.hero-slides {
+.hero-carousel {
+  position: relative;
+  width: 100%;
+  height: 420px;
+  margin-bottom: 1.2rem;
+  /* Réglages du coverflow : largeur de la miniature centrale et écartement des voisines */
+  --poster-w: 210px;
+  --gap-1: 165px;
+  --gap-2: 290px;
+  --gap-3: 400px;
+  --gap-4: 505px;
+  --scale-1: 0.78;
+  --scale-2: 0.56;
+}
+
+.hero-track {
   position: relative;
   width: 100%;
   height: 100%;
-  overflow: hidden;
 }
 
-.hero-slide {
+.hero-item {
   position: absolute;
-  top: 0;
-  left: 0;
+  top: 50%;
+  left: 50%;
+  width: var(--poster-w);
+  aspect-ratio: 9/16;
+  border-radius: 14px;
+  overflow: hidden;
+  cursor: pointer;
+  border: none;
+  padding: 0;
+  background: #0A0A0F;
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.55);
+  transition: transform 0.5s cubic-bezier(0.22, 0.68, 0, 1), opacity 0.5s ease, filter 0.5s ease;
+}
+
+.hero-item img {
   width: 100%;
   height: 100%;
-  opacity: 0;
-  transition: opacity 0.8s ease-in-out;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  display: flex;
-  align-items: flex-end;
-  cursor: pointer;
-  border-radius: 24px;
+  object-fit: cover;
+  display: block;
 }
 
-.hero-slide.active {
+.hero-item.pos-0 {
+  transform: translate(-50%, -50%) scale(1);
+  z-index: 5;
   opacity: 1;
 }
 
-.hero-slide::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.8) 100%);
-  z-index: 1;
-  border-radius: 24px;
+.hero-item.pos-1 {
+  transform: translate(calc(-50% + var(--gap-1)), -50%) scale(var(--scale-1));
+  z-index: 4;
+  opacity: 0.85;
+  filter: brightness(0.7);
 }
 
-.hero-slide-content {
-  position: relative;
+.hero-item.pos--1 {
+  transform: translate(calc(-50% - var(--gap-1)), -50%) scale(var(--scale-1));
+  z-index: 4;
+  opacity: 0.85;
+  filter: brightness(0.7);
+}
+
+.hero-item.pos-2 {
+  transform: translate(calc(-50% + var(--gap-2)), -50%) scale(var(--scale-2));
+  z-index: 3;
+  opacity: 0.55;
+  filter: brightness(0.55);
+}
+
+.hero-item.pos--2 {
+  transform: translate(calc(-50% - var(--gap-2)), -50%) scale(var(--scale-2));
+  z-index: 3;
+  opacity: 0.55;
+  filter: brightness(0.55);
+}
+
+/* Même taille que pos-2 / pos--2, juste plus loin du centre : comble l'espace sur les côtés */
+.hero-item.pos-3,
+.hero-item.pos-4 {
+  transform: translate(calc(-50% + var(--gap-3)), -50%) scale(var(--scale-2));
   z-index: 2;
-  padding: 2rem 2.5rem;
-  width: 100%;
-  max-width: 600px;
+  opacity: 0.55;
+  filter: brightness(0.55);
 }
 
-.hero-slide-content h2 {
-  font-size: 2.5rem;
+.hero-item.pos-4 {
+  transform: translate(calc(-50% + var(--gap-4)), -50%) scale(var(--scale-2));
+}
+
+.hero-item.pos--3,
+.hero-item.pos--4 {
+  transform: translate(calc(-50% - var(--gap-3)), -50%) scale(var(--scale-2));
+  z-index: 2;
+  opacity: 0.55;
+  filter: brightness(0.55);
+}
+
+.hero-item.pos--4 {
+  transform: translate(calc(-50% - var(--gap-4)), -50%) scale(var(--scale-2));
+}
+
+.hero-item.pos-hidden {
+  transform: translate(-50%, -50%) scale(0.4);
+  z-index: 1;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.hero-item.pos-0:hover {
+  transform: translate(-50%, -50%) scale(1.03);
+}
+
+.hero-info {
+  max-width: 640px;
+  margin: 0 auto;
+  text-align: center;
+  padding: 0 1.5rem;
+}
+
+.hero-info h2 {
+  font-size: 2rem;
   font-weight: 700;
-  margin-bottom: 0.8rem;
-  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8);
+  margin-bottom: 0.6rem;
 }
 
-.hero-slide-content p {
+.hero-info .meta {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 0.8rem;
+}
+
+.hero-info p.synopsis {
   font-size: 0.95rem;
   line-height: 1.6;
   color: var(--text);
@@ -260,13 +333,7 @@ input:focus-visible {
   overflow: hidden;
 }
 
-.hero-slide-content .meta {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  margin-bottom: 1rem;
-}
-
-.hero-slide-btn {
+.hero-info-btn {
   display: inline-block;
   background: var(--accent);
   color: white;
@@ -275,28 +342,27 @@ input:focus-visible {
   border-radius: 6px;
   cursor: pointer;
   font-weight: 600;
-  transition: background 0.2s ease;
+  text-decoration: none;
+  transition: opacity 0.2s ease;
 }
 
-.hero-slide-btn:hover {
+.hero-info-btn:hover {
   opacity: 0.9;
 }
 
 .hero-nav {
-  position: absolute;
-  bottom: 1.5rem;
-  left: 50%;
-  transform: translateX(-50%);
+  position: relative;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 1.5rem;
-  z-index: 3;
+  margin-bottom: 1.2rem;
 }
 
 .hero-nav-btn {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
   color: white;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   width: 40px;
   height: 40px;
   border-radius: 50%;
@@ -309,8 +375,8 @@ input:focus-visible {
 }
 
 .hero-nav-btn:hover {
-  background: rgba(255, 255, 255, 0.3);
-  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.4);
 }
 
 .hero-dots {
@@ -858,22 +924,17 @@ input:focus-visible {
     min-width: auto;
   }
 
-  .hero-slider {
-    height: 380px;
-    border-radius: 14px;
+  .hero-carousel {
+    height: 260px;
+    --poster-w: 130px;
+    --gap-1: 100px;
+    --gap-2: 175px;
+    --gap-3: 240px;
+    --gap-4: 300px;
   }
 
-  .hero-slide,
-  .hero-slide::before {
-    border-radius: 14px;
-  }
-
-  .hero-slide-content {
-    padding: 1.25rem 1.25rem 5rem;
-  }
-
-  .hero-slide-content h2 {
-    font-size: 1.8rem;
+  .hero-info h2 {
+    font-size: 1.5rem;
   }
 
   .video-grid {

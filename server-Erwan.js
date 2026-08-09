@@ -1,7 +1,9 @@
 // server.js
 // Backend simple pour Fistunia.IO
 // - Sert les fichiers statiques (html/css/js)
-// - Expose une API REST qui lit/écrit dans data/db.json
+// - Expose une API REST qui lit/écrit dans Firestore (collection "content", doc "app")
+
+require("dotenv").config();
 
 const express = require("express");
 const jwt = require("jsonwebtoken");
