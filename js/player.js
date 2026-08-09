@@ -79,6 +79,17 @@ async function chargerLecteur() {
   const embedCode = (episode.embedCode || "").trim();
   const vromovId = (episode.vromovId || "").trim();
 
+  function bloquerOuverturePage(event) {
+    const cible = event.target;
+    if (!cible) return;
+
+    const elementClic = cible.closest("a, button, [onclick]");
+    if (!elementClic) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
   function afficherLecteurVideo(videoUrl) {
     if (!videoUrl) {
       container.innerHTML = "<p>Aucune URL vidéo disponible.</p>";
@@ -93,6 +104,11 @@ async function chargerLecteur() {
           Votre navigateur ne supporte pas la lecture vidéo.
         </video>
       `;
+      const lecteur = container.querySelector(".video-player");
+      if (lecteur) {
+        lecteur.addEventListener("click", bloquerOuverturePage);
+        lecteur.addEventListener("mousedown", bloquerOuverturePage);
+      }
       return;
     }
 
@@ -108,6 +124,9 @@ async function chargerLecteur() {
 
   if (embedCode) {
     container.innerHTML = embedCode;
+    container.querySelectorAll("a, button").forEach((element) => {
+      element.addEventListener("click", bloquerOuverturePage);
+    });
     return;
   }
 
@@ -121,6 +140,21 @@ async function chargerLecteur() {
         class="embed-iframe"
       ></iframe>
     `;
+    const iframe = container.querySelector(".embed-iframe");
+    if (iframe) {
+      iframe.addEventListener("load", () => {
+        try {
+          const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+          if (iframeDoc) {
+            iframeDoc.querySelectorAll("a, button").forEach((element) => {
+              element.addEventListener("click", bloquerOuverturePage);
+            });
+          }
+        } catch (error) {
+          console.warn("Impossible d'intercepter les clics dans l'iframe", error);
+        }
+      });
+    }
     return;
   }
 
