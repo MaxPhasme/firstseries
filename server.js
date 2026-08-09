@@ -28,11 +28,39 @@ app.use((req, res, next) => {
 });
 app.use(express.json({ limit: "100kb" }));
 
+// Configuration publique du SDK Firebase Web. Ces valeurs (à l’exception
+// du service account) sont destinées au navigateur et ne sont pas des secrets.
+app.get("/api/firebase-config", (req, res) => {
+  try {
+    let projectId = process.env.FIREBASE_PROJECT_ID || "";
+    if (!projectId) {
+      const serviceAccount = chargerServiceAccount();
+      projectId = serviceAccount.project_id || "";
+    }
+
+    const apiKey = process.env.FIREBASE_WEB_API_KEY || process.env.FIREBASE_API_KEY || "";
+    if (!apiKey || !projectId) {
+      return res.status(503).json({
+        erreur: "Configuration Firebase Web manquante. Définissez FIREBASE_WEB_API_KEY et FIREBASE_PROJECT_ID."
+      });
+    }
+
+    res.json({
+      apiKey,
+      authDomain: process.env.FIREBASE_AUTH_DOMAIN || `${projectId}.firebaseapp.com`,
+      projectId,
+    });
+  } catch (erreur) {
+    console.error(erreur);
+    res.status(500).json({ erreur: "Impossible de charger la configuration Firebase Web" });
+  }
+});
+
 // Ne jamais publier toute la racine : elle peut contenir la clé privée Firebase.
 app.use("/css", express.static(path.join(__dirname, "css"), { dotfiles: "deny" }));
 app.use("/js", express.static(path.join(__dirname, "js"), { dotfiles: "deny" }));
 app.use("/assets", express.static(path.join(__dirname, "assets"), { dotfiles: "deny" }));
-const PAGES_PUBLIQUES = new Set(["index.html", "serie.html", "video.html", "admin.html"]);
+const PAGES_PUBLIQUES = new Set(["index.html", "app.html", "serie.html", "video.html", "admin.html"]);
 app.get("/", (req, res) => res.sendFile(path.join(__dirname, "index.html")));
 app.get("/:page", (req, res, next) => {
   if (!PAGES_PUBLIQUES.has(req.params.page)) return next();

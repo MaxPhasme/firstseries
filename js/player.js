@@ -53,7 +53,7 @@ async function chargerLecteur() {
   if (estFilm) {
     episodeTitreEl.textContent = `${serie.titre}`;
     synopsisEl.textContent = serie.synopsis;
-    retourEl.href = "index.html";
+    retourEl.href = "app.html";
     retourEl.textContent = "← Retour au catalogue";
     const videoUrl = (serie.videoUrl || "").trim();
     if (!videoUrl) {

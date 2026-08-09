@@ -1365,3 +1365,9 @@ body {
     transition: none;
   }
 }
+
+/* Compte utilisateur Firebase */
+.site-header .user-menu { flex: 0 0 auto; }
+@media (max-width: 760px) {
+  .site-header .user-menu .user-name { display: none; }
+}

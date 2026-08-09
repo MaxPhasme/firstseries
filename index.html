@@ -3,74 +3,92 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FirstSeries.io</title>
+  <title>Connexion — FirstSeries</title>
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/auth.css">
 </head>
-<body>
-
-  <header class="site-header">
+<body class="auth-page">
+  <header class="site-header auth-header">
     <a href="index.html" class="logo">First<span>Series</span></a>
-
-    <div class="header-center">
-      <div class="genre-filter-section">
-        <div class="genre-dropdown">
-          <button id="genre-dropdown-button" type="button" class="genre-dropdown-btn" aria-label="Sélectionner un genre" aria-haspopup="true">
-            Genre
-          </button>
-          <div class="genre-dropdown-panel">
-            <div id="genre-filter-list" class="genre-filter-list">Chargement des genres…</div>
-            <div class="genre-dropdown-actions">
-              <button id="clear-genre-filters" type="button" class="filter-chip filter-clear">Voir tout</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="type-filter-section">
-        <button id="filter-all" type="button" class="filter-chip active">Tous</button>
-        <button id="filter-series" type="button" class="filter-chip">Séries</button>
-        <button id="filter-films" type="button" class="filter-chip">Films</button>
-      </div>
-    </div>
-
-    <div class="search-box">
-      <label class="visually-hidden" for="search-bar">Rechercher un contenu</label>
-      <span class="search-icon" aria-hidden="true">⌕</span>
-      <input type="search" id="search-bar" placeholder="Rechercher un contenu..." autocomplete="off" spellcheck="false">
-      <button class="search-shortcut" type="button" aria-label="Activer la recherche">Ctrl K</button>
-    </div>
+    <div class="auth-header-note">Votre espace streaming</div>
   </header>
 
-  <main>
-    <!-- Hero Carousel -->
-    <section id="hero-slider" class="hero-slider">
-      <div class="hero-carousel">
-        <div id="hero-track" class="hero-track"></div>
+  <main class="auth-main">
+    <div class="auth-shell">
+      <div class="auth-brand-copy">
+        <p class="auth-eyebrow">FIRSTSERIES</p>
+        <h1>Retrouvez tous vos contenus.</h1>
+        <p>Connectez-vous ou créez votre compte pour accéder au catalogue. Votre session reste active lorsque vous quittez le site.</p>
       </div>
-      <div class="hero-nav">
-        <button id="hero-prev" type="button" class="hero-nav-btn hero-nav-prev" aria-label="Élément précédent">❮</button>
-        <div id="hero-dots" class="hero-dots"></div>
-        <button id="hero-next" type="button" class="hero-nav-btn hero-nav-next" aria-label="Élément suivant">❯</button>
-      </div>
-      <div id="hero-info" class="hero-info"></div>
-    </section>
 
-    <!-- Catalogue -->
-    <div class="catalogue-section">
-      <h2 class="section-title">Tous les contenus</h2>
-      <div id="serie-grid" class="video-grid">
-        <p id="loading-msg">Chargement du catalogue...</p>
+      <div class="auth-card" id="login-card">
+        <div class="auth-card-head">
+          <span class="auth-kicker">Bienvenue</span>
+          <h2>Connexion</h2>
+          <p>Connectez-vous pour accéder à tout le contenu</p>
+        </div>
+
+        <form id="login-form" class="auth-form">
+          <label for="login-email">Email</label>
+          <div class="auth-input-wrap"><span>✉</span><input id="login-email" type="email" placeholder="Votre email" autocomplete="email" required></div>
+
+          <label for="login-password">Mot de passe</label>
+          <div class="auth-input-wrap"><span>⌑</span><input id="login-password" type="password" placeholder="Votre mot de passe" autocomplete="current-password" required><button type="button" class="password-toggle" data-target="login-password" aria-label="Afficher le mot de passe">◉</button></div>
+
+          <div class="auth-row">
+            <label class="check-label"><input id="remember-me" type="checkbox" checked><span>Rester connecté</span></label>
+            <button type="button" class="text-button" id="forgot-password">Mot de passe oublié ?</button>
+          </div>
+
+          <button class="auth-submit" type="submit">Se connecter</button>
+        </form>
+
+        <div class="auth-divider"><span>ou</span></div>
+        <button class="google-button" id="google-login" type="button"><strong>G</strong> Continuer avec Google</button>
+        <p class="auth-switch">Pas encore de compte ? <button type="button" class="text-button" data-show="signup">Créer un compte</button></p>
+        <p class="auth-error" id="login-error" role="alert"></p>
       </div>
+
+      <div class="auth-card" id="signup-card" hidden>
+        <div class="auth-card-head">
+          <span class="auth-kicker">Rejoignez-nous</span>
+          <h2>Créer un compte</h2>
+          <p>Profitez de tout le contenu FirstSeries</p>
+        </div>
+
+        <form id="signup-form" class="auth-form">
+          <label for="signup-name">Nom d'utilisateur</label>
+          <div class="auth-input-wrap"><span>♙</span><input id="signup-name" type="text" placeholder="Votre nom d'utilisateur" autocomplete="nickname" minlength="2" maxlength="30" required></div>
+
+          <label for="signup-email">Email</label>
+          <div class="auth-input-wrap"><span>✉</span><input id="signup-email" type="email" placeholder="Votre email" autocomplete="email" required></div>
+
+          <label for="signup-password">Mot de passe</label>
+          <div class="auth-input-wrap"><span>⌑</span><input id="signup-password" type="password" placeholder="Minimum 6 caractères" autocomplete="new-password" minlength="6" required><button type="button" class="password-toggle" data-target="signup-password" aria-label="Afficher le mot de passe">◉</button></div>
+
+          <label for="signup-password-confirm">Confirmer le mot de passe</label>
+          <div class="auth-input-wrap"><span>⌑</span><input id="signup-password-confirm" type="password" placeholder="Confirmez votre mot de passe" autocomplete="new-password" required><button type="button" class="password-toggle" data-target="signup-password-confirm" aria-label="Afficher le mot de passe">◉</button></div>
+
+          <label class="check-label terms-label"><input id="accept-terms" type="checkbox" required><span>J'accepte les <a href="#">Conditions d'utilisation</a> et la <a href="#">Politique de confidentialité</a></span></label>
+          <button class="auth-submit" type="submit">Créer mon compte</button>
+        </form>
+
+        <div class="auth-divider"><span>ou</span></div>
+        <button class="google-button" id="google-signup" type="button"><strong>G</strong> Continuer avec Google</button>
+        <p class="auth-switch">Déjà un compte ? <button type="button" class="text-button" data-show="login">Se connecter</button></p>
+        <p class="auth-error" id="signup-error" role="alert"></p>
+      </div>
+    </div>
+
+    <div class="auth-features">
+      <div><span>♢</span><strong>Sécurisé</strong><small>Vos données sont protégées</small></div>
+      <div><span>ϟ</span><strong>Rapide</strong><small>Connexion instantanée avec Firebase</small></div>
+      <div><span>◈</span><strong>Persistant</strong><small>Restez connecté entre vos visites</small></div>
     </div>
   </main>
 
-  <footer class="site-footer">
-    <p>ALPHA | FirstSeries.io | by Le Maxi Phasme</p>
-    <a href="admin.html" class="admin-link">Accéder à l’admin</a>
-  </footer>
-
-  <script src="js/data.js"></script>
-  <script src="js/catalogue.js"></script>
-  <script src="js/main.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-auth-compat.js"></script>
+  <script src="js/auth.js"></script>
 </body>
 </html>

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FirstSeries.io</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-requires-auth="true">
+
+  <header class="site-header">
+    <a href="app.html" class="logo">First<span>Series</span></a>
+
+    <div class="user-menu" id="user-menu" hidden>
+      <button class="user-menu-button" id="user-menu-button" type="button" aria-expanded="false">
+        <span class="user-avatar" id="user-avatar">U</span>
+        <span class="user-name" id="user-name">Compte</span>
+      </button>
+      <div class="user-menu-panel" id="user-menu-panel" hidden>
+        <div class="user-menu-email" id="user-email"></div>
+        <button type="button" id="logout-button">Se déconnecter</button>
+      </div>
+    </div>
+
+    <div class="header-center">
+      <div class="genre-filter-section">
+        <div class="genre-dropdown">
+          <button id="genre-dropdown-button" type="button" class="genre-dropdown-btn" aria-label="Sélectionner un genre" aria-haspopup="true">
+            Genre
+          </button>
+          <div class="genre-dropdown-panel">
+            <div id="genre-filter-list" class="genre-filter-list">Chargement des genres…</div>
+            <div class="genre-dropdown-actions">
+              <button id="clear-genre-filters" type="button" class="filter-chip filter-clear">Voir tout</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="type-filter-section">
+        <button id="filter-all" type="button" class="filter-chip active">Tous</button>
+        <button id="filter-series" type="button" class="filter-chip">Séries</button>
+        <button id="filter-films" type="button" class="filter-chip">Films</button>
+      </div>
+    </div>
+
+    <div class="search-box">
+      <label class="visually-hidden" for="search-bar">Rechercher un contenu</label>
+      <span class="search-icon" aria-hidden="true">⌕</span>
+      <input type="search" id="search-bar" placeholder="Rechercher un contenu..." autocomplete="off" spellcheck="false">
+      <button class="search-shortcut" type="button" aria-label="Activer la recherche">Ctrl K</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- Hero Carousel -->
+    <section id="hero-slider" class="hero-slider">
+      <div class="hero-carousel">
+        <div id="hero-track" class="hero-track"></div>
+      </div>
+      <div class="hero-nav">
+        <button id="hero-prev" type="button" class="hero-nav-btn hero-nav-prev" aria-label="Élément précédent">❮</button>
+        <div id="hero-dots" class="hero-dots"></div>
+        <button id="hero-next" type="button" class="hero-nav-btn hero-nav-next" aria-label="Élément suivant">❯</button>
+      </div>
+      <div id="hero-info" class="hero-info"></div>
+    </section>
+
+    <!-- Catalogue -->
+    <div class="catalogue-section">
+      <h2 class="section-title">Tous les contenus</h2>
+      <div id="serie-grid" class="video-grid">
+        <p id="loading-msg">Chargement du catalogue...</p>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <p>ALPHA | FirstSeries.io | by Le Maxi Phasme</p>
+    <a href="admin.html" class="admin-link">Accéder à l’admin</a>
+  </footer>
+
+  <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-auth-compat.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/catalogue.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
