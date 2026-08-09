@@ -389,4 +389,31 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (prevBtn) prevBtn.addEventListener("click", prevSlide);
   if (nextBtn) nextBtn.addEventListener("click", nextSlide);
+
+  // Navigation tactile sur mobile : glisser horizontalement sur le carousel.
+  const heroCarousel = document.querySelector(".hero-carousel");
+  if (heroCarousel) {
+    let touchStartX = 0;
+    let touchStartY = 0;
+
+    heroCarousel.addEventListener("touchstart", (event) => {
+      const touch = event.changedTouches[0];
+      touchStartX = touch.clientX;
+      touchStartY = touch.clientY;
+    }, { passive: true });
+
+    heroCarousel.addEventListener("touchend", (event) => {
+      const touch = event.changedTouches[0];
+      const deltaX = touch.clientX - touchStartX;
+      const deltaY = touch.clientY - touchStartY;
+
+      if (Math.abs(deltaX) < 45 || Math.abs(deltaX) < Math.abs(deltaY)) return;
+
+      if (deltaX < 0) {
+        nextSlide();
+      } else {
+        prevSlide();
+      }
+    }, { passive: true });
+  }
 });

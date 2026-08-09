@@ -33,8 +33,12 @@
       </div>
     </div>
 
-    <label class="visually-hidden" for="search-bar">Rechercher un contenu</label>
-    <input type="search" id="search-bar" placeholder="Rechercher un contenu..." autocomplete="off">
+    <div class="search-box">
+      <label class="visually-hidden" for="search-bar">Rechercher un contenu</label>
+      <span class="search-icon" aria-hidden="true">⌕</span>
+      <input type="search" id="search-bar" placeholder="Rechercher un contenu..." autocomplete="off" spellcheck="false">
+      <button class="search-shortcut" type="button" aria-label="Activer la recherche">Ctrl K</button>
+    </div>
   </header>
 
   <main>

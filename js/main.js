@@ -19,3 +19,27 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 });
+
+
+// Raccourci clavier moderne : Ctrl/Cmd + K pour accéder rapidement à la recherche.
+document.addEventListener("keydown", (event) => {
+  if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
+    event.preventDefault();
+    const searchBar = document.getElementById("search-bar");
+    if (searchBar) {
+      searchBar.focus();
+      searchBar.select();
+    }
+  }
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+  const shortcut = document.querySelector(".search-shortcut");
+  const searchBar = document.getElementById("search-bar");
+  if (shortcut && searchBar) {
+    shortcut.addEventListener("click", () => {
+      searchBar.focus();
+      searchBar.select();
+    });
+  }
+});
