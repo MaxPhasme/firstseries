@@ -5,6 +5,8 @@
 // Utilisation :
 //   node set-admin-password.js "MonNouveauMotDePasse"
 
+require("dotenv").config();
+
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
@@ -68,8 +70,8 @@ async function definirMotDePasse() {
     misAJourLe: new Date().toISOString(),
   });
 
-  console.log("c'est ok.");
-  console.log("mdp hide");
+  console.log("✅ Mot de passe admin mis à jour avec succès.");
+  console.log("   (hashé et salé — jamais stocké en clair)");
 }
 
 definirMotDePasse().catch((erreur) => {

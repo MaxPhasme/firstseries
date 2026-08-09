@@ -216,74 +216,55 @@ function creerCarteSerie(serie) {
   return carte;
 }
 
+let heroItems = [];
+let currentSlide = 0;
+let autoSlideInterval = null;
+
 async function initialiserHeroSlider() {
-  const heroSlides = document.getElementById("hero-slides");
+  const heroTrack = document.getElementById("hero-track");
   const heroDots = document.getElementById("hero-dots");
 
-  if (!heroSlides) return;
+  if (!heroTrack) return;
 
   try {
     const donnees = await chargerDonnees();
 
     if (!donnees.series || donnees.series.length === 0) return;
 
-    const series = donnees.series.slice(0, 6);
+    heroItems = donnees.series.slice(0, 8);
 
-    series.forEach((serie, index) => {
+    heroItems.forEach((serie, index) => {
       const miniature = serie.miniature && serie.miniature.trim() !== ""
         ? serie.miniature
         : "assets/placeholder.jpg";
 
-      const slide = document.createElement("div");
-      slide.className = `hero-slide ${index === 0 ? "active" : ""}`;
-      slide.tabIndex = 0;
-      slide.setAttribute("role", "link");
-      slide.setAttribute("aria-label", `Voir ${serie.titre || "ce contenu"}`);
-      slide.style.backgroundImage = `url('${miniature}')`;
-      slide.addEventListener("click", () => {
-        const targetUrl = (serie.type || "").toLowerCase() === "film"
-          ? `video.html?serie=${encodeURIComponent(serie.id)}&type=film`
-          : `serie.html?id=${encodeURIComponent(serie.id)}`;
-        window.location.href = targetUrl;
-      });
-      slide.addEventListener("keydown", (event) => {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
-          slide.click();
-        }
-      });
+      const item = document.createElement("button");
+      item.type = "button";
+      item.className = "hero-item";
+      item.dataset.index = String(index);
+      item.setAttribute("aria-label", `Voir ${serie.titre || "ce contenu"}`);
 
-      const saisons = Array.isArray(serie.saisons) ? serie.saisons : [];
-      const nbSaisons = saisons.length;
-      const nbEpisodes = saisons.reduce((acc, s) => acc + (s.episodes?.length || 0), 0);
+      const image = document.createElement("img");
+      image.src = miniature;
+      image.alt = serie.titre || "Affiche du contenu";
+      image.loading = "lazy";
+      image.addEventListener("error", () => {
+        image.src = "assets/placeholder.jpg";
+      }, { once: true });
 
-      const contenu = document.createElement("div");
-      contenu.className = "hero-slide-content";
-      const titre = document.createElement("h2");
-      titre.textContent = serie.titre || "Sans titre";
-      const meta = document.createElement("p");
-      meta.className = "meta";
-      meta.textContent = isFilm(serie)
-        ? "Film"
-        : `${nbSaisons} saison${nbSaisons > 1 ? "s" : ""} • ${nbEpisodes} épisode${nbEpisodes > 1 ? "s" : ""}`;
-      const synopsis = document.createElement("p");
-      synopsis.textContent = serie.synopsis || "";
-      const regarder = document.createElement("span");
-      regarder.className = "hero-slide-btn";
-      regarder.textContent = "Regarder";
-      contenu.append(titre, meta, synopsis, regarder);
-      slide.appendChild(contenu);
-
-      heroSlides.appendChild(slide);
+      item.appendChild(image);
+      item.addEventListener("click", () => gererClicHero(index));
+      heroTrack.appendChild(item);
 
       const dot = document.createElement("button");
       dot.type = "button";
-      dot.className = `hero-dot ${index === 0 ? "active" : ""}`;
-      dot.setAttribute("aria-label", `Afficher la diapositive ${index + 1}`);
+      dot.className = "hero-dot";
+      dot.setAttribute("aria-label", `Afficher l'élément ${index + 1}`);
       dot.addEventListener("click", () => goToSlide(index));
       heroDots.appendChild(dot);
     });
 
+    afficherSlide(0);
     initAutoSlide();
   } catch (erreur) {
     console.error(erreur);
@@ -294,27 +275,94 @@ function isFilm(serie) {
   return (serie.type || "").toLowerCase() === "film";
 }
 
-let currentSlide = 0;
-let autoSlideInterval = null;
+// Décalage circulaire (le plus court, signé) entre l'index d'un item et la position centrale actuelle.
+function decalageDepuisCentre(index, total) {
+  let diff = ((index - currentSlide) % total + total) % total;
+  if (diff > total / 2) diff -= total;
+  return diff;
+}
 
-function showSlide(index) {
-  const slides = document.querySelectorAll(".hero-slide");
-  const dots = document.querySelectorAll(".hero-dot");
+function gererClicHero(index) {
+  if (index === currentSlide) {
+    const serie = heroItems[currentSlide];
+    if (!serie) return;
+    const cible = isFilm(serie)
+      ? `video.html?serie=${encodeURIComponent(serie.id)}&type=film`
+      : `serie.html?id=${encodeURIComponent(serie.id)}`;
+    window.location.href = cible;
+  } else {
+    goToSlide(index);
+  }
+}
 
-  if (slides.length === 0) return;
+function afficherSlide(index) {
+  const total = heroItems.length;
+  if (total === 0) return;
 
-  currentSlide = (index + slides.length) % slides.length;
+  currentSlide = (index + total) % total;
 
-  slides.forEach((slide) => slide.classList.remove("active"));
-  dots.forEach((dot) => dot.classList.remove("active"));
+  document.querySelectorAll(".hero-item").forEach((item) => {
+    const i = Number(item.dataset.index);
+    const decalage = decalageDepuisCentre(i, total);
+    item.classList.remove("pos-0", "pos-1", "pos--1", "pos-2", "pos--2", "pos-3", "pos--3", "pos-4", "pos--4", "pos-hidden");
+    if (decalage === 0) item.classList.add("pos-0");
+    else if (decalage === 1) item.classList.add("pos-1");
+    else if (decalage === -1) item.classList.add("pos--1");
+    else if (decalage === 2) item.classList.add("pos-2");
+    else if (decalage === -2) item.classList.add("pos--2");
+    else if (decalage === 3) item.classList.add("pos-3");
+    else if (decalage === -3) item.classList.add("pos--3");
+    else if (decalage === 4) item.classList.add("pos-4");
+    else if (decalage === -4) item.classList.add("pos--4");
+    else item.classList.add("pos-hidden");
+  });
 
-  slides[currentSlide].classList.add("active");
-  dots[currentSlide].classList.add("active");
+  document.querySelectorAll(".hero-dot").forEach((dot, i) => {
+    dot.classList.toggle("active", i === currentSlide);
+  });
+
+  mettreAJourInfoHero();
+}
+
+function mettreAJourInfoHero() {
+  const heroInfo = document.getElementById("hero-info");
+  const serie = heroItems[currentSlide];
+  if (!heroInfo || !serie) return;
+
+  const saisons = Array.isArray(serie.saisons) ? serie.saisons : [];
+  const nbSaisons = saisons.length;
+  const nbEpisodes = saisons.reduce((acc, s) => acc + (s.episodes?.length || 0), 0);
+  const metaText = isFilm(serie)
+    ? "Film"
+    : `${nbSaisons} saison${nbSaisons > 1 ? "s" : ""} • ${nbEpisodes} épisode${nbEpisodes > 1 ? "s" : ""}`;
+  const cible = isFilm(serie)
+    ? `video.html?serie=${encodeURIComponent(serie.id)}&type=film`
+    : `serie.html?id=${encodeURIComponent(serie.id)}`;
+
+  heroInfo.replaceChildren();
+
+  const titre = document.createElement("h2");
+  titre.textContent = serie.titre || "Sans titre";
+
+  const meta = document.createElement("p");
+  meta.className = "meta";
+  meta.textContent = metaText;
+
+  const synopsis = document.createElement("p");
+  synopsis.className = "synopsis";
+  synopsis.textContent = serie.synopsis || "";
+
+  const regarder = document.createElement("a");
+  regarder.className = "hero-info-btn";
+  regarder.href = cible;
+  regarder.textContent = "Regarder";
+
+  heroInfo.append(titre, meta, synopsis, regarder);
 }
 
 function goToSlide(index) {
   clearInterval(autoSlideInterval);
-  showSlide(index);
+  afficherSlide(index);
   initAutoSlide();
 }
 
@@ -328,7 +376,7 @@ function prevSlide() {
 
 function initAutoSlide() {
   autoSlideInterval = setInterval(() => {
-    showSlide(currentSlide + 1);
+    afficherSlide(currentSlide + 1);
   }, 5000);
 }
 

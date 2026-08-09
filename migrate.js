@@ -5,6 +5,8 @@
 // Utilisation :
 //   node migrate.js
 
+require("dotenv").config();
+
 const fs = require("fs");
 const path = require("path");
 const { initializeApp, cert, getApps } = require("firebase-admin/app");

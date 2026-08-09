@@ -102,7 +102,14 @@ function initialiserAuthentification() {
       });
 
       if (!reponse.ok) {
-        erreur.textContent = "Mot de passe incorrect.";
+        let messageErreur = "Mot de passe incorrect.";
+        try {
+          const corps = await reponse.json();
+          if (corps?.erreur) messageErreur = corps.erreur;
+        } catch (_) {
+          // Réponse sans corps JSON exploitable : on garde le message par défaut.
+        }
+        erreur.textContent = messageErreur;
         motDePasseInput.focus();
         return;
       }

@@ -1,7 +1,7 @@
 // data.js
 // Couche d'accès aux données : séries > saisons > épisodes
 // Parle à l'API du backend Express (server.js), qui stocke tout
-// dans data/db.json sur le disque.
+// dans Firestore.
 
 const API_URL = "/api";
 
