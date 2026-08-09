@@ -13,6 +13,8 @@ async function chargerLecteur() {
   const episodeTitreEl = document.getElementById("episode-titre");
   const synopsisEl = document.getElementById("serie-synopsis-player");
   const retourEl = document.getElementById("retour-serie");
+  const prevButton = document.getElementById("btn-prev-episode");
+  const nextButton = document.getElementById("btn-next-episode");
 
   if (!serieId) {
     episodeTitreEl.textContent = "Contenu introuvable";
@@ -29,6 +31,8 @@ async function chargerLecteur() {
   const estFilm = type === "film" || (serie.type || "").toLowerCase() === "film";
   let episode = null;
   let saison = null;
+  let saisonEpisodes = [];
+  let currentIndex = -1;
 
   if (!estFilm) {
     if (!saisonId || !episodeId) {
@@ -47,6 +51,26 @@ async function chargerLecteur() {
       episodeTitreEl.textContent = "Épisode introuvable";
       return;
     }
+
+    saisonEpisodes = serie.saisons
+      .slice()
+      .sort((a, b) => a.numero - b.numero)
+      .flatMap((s) => {
+        return (s.episodes || [])
+          .slice()
+          .sort((a, b) => a.numero - b.numero)
+          .map((ep) => ({
+            serieId: serie.id,
+            saisonId: s.id,
+            episodeId: ep.id,
+            saisonNumero: s.numero,
+            episodeNumero: ep.numero,
+            titre: ep.titre,
+            estFilm: false,
+          }));
+      });
+
+    currentIndex = saisonEpisodes.findIndex((item) => item.saisonId === saison.id && item.episodeId === episode.id);
   }
 
   // Titre affiché : Nom de la série/film + numéro d'épisode si nécessaire
@@ -55,11 +79,20 @@ async function chargerLecteur() {
     synopsisEl.textContent = serie.synopsis;
     retourEl.href = "app.html";
     retourEl.textContent = "← Retour au catalogue";
+    if (prevButton) prevButton.style.display = "none";
+    if (nextButton) nextButton.style.display = "none";
     const videoUrl = (serie.videoUrl || "").trim();
     if (!videoUrl) {
       container.innerHTML = "<p>Aucune URL vidéo disponible pour ce film.</p>";
       return;
     }
+    enregistrerLectureEnCours({
+      serieId: serie.id,
+      type: "film",
+      serieTitle: serie.titre,
+      titre: serie.titre,
+      imageUrl: serie.miniature || serie.affiche || "assets/placeholder.jpg",
+    });
     afficherLecteurVideo(videoUrl);
     initCommentaires(serie.id);
     return;
@@ -68,6 +101,38 @@ async function chargerLecteur() {
   episodeTitreEl.textContent = `${serie.titre} — S${saison.numero}E${episode.numero} — ${episode.titre}`;
   synopsisEl.textContent = serie.synopsis;
   retourEl.href = `serie.html?id=${encodeURIComponent(serie.id)}`;
+
+  if (prevButton) {
+    const previous = currentIndex > 0 ? saisonEpisodes[currentIndex - 1] : null;
+    prevButton.disabled = !previous;
+    prevButton.addEventListener("click", () => {
+      if (!previous) return;
+      supprimerLectureEnCours(serie.id, saison.id, episode.id, "serie");
+      window.location.href = buildEpisodeUrl(previous);
+    });
+  }
+
+  if (nextButton) {
+    const next = currentIndex >= 0 && currentIndex < saisonEpisodes.length - 1 ? saisonEpisodes[currentIndex + 1] : null;
+    nextButton.disabled = !next;
+    nextButton.addEventListener("click", () => {
+      if (!next) return;
+      supprimerLectureEnCours(serie.id, saison.id, episode.id, "serie");
+      window.location.href = buildEpisodeUrl(next);
+    });
+  }
+
+  enregistrerLectureEnCours({
+    serieId: serie.id,
+    saisonId: saison.id,
+    episodeId: episode.id,
+    type: "serie",
+    serieTitle: serie.titre,
+    titre: episode.titre,
+    saisonNumero: saison.numero,
+    episodeNumero: episode.numero,
+    imageUrl: serie.miniature || serie.affiche || "assets/placeholder.jpg",
+  });
 
   // Zone de commentaires de cet épisode (voir commentaires.js).
   // Pas de await : le lecteur ne doit pas attendre le chargement des commentaires.
@@ -78,6 +143,33 @@ async function chargerLecteur() {
   // Fallbacks pour anciens formats
   const embedCode = (episode.embedCode || "").trim();
   const vromovId = (episode.vromovId || "").trim();
+
+  function buildEpisodeUrl(item) {
+    if (!item) return "#";
+    const url = `video.html?serie=${encodeURIComponent(item.serieId)}`;
+    if (item.type === "film" || item.estFilm) return `${url}&type=film`;
+    return `${url}&saison=${encodeURIComponent(item.saisonId)}&episode=${encodeURIComponent(item.episodeId)}`;
+  }
+
+  function enregistrerLectureEnCours(watched) {
+    if (!window.localStorage) return;
+    const lecture = {
+      ...watched,
+      timestamp: Date.now(),
+    };
+    const lectures = lireLecturesEnCours();
+    const dejaPresentIndex = lectures.findIndex((item) =>
+      item.serieId === lecture.serieId &&
+      item.saisonId === lecture.saisonId &&
+      item.episodeId === lecture.episodeId &&
+      item.type === lecture.type
+    );
+    if (dejaPresentIndex !== -1) {
+      lectures.splice(dejaPresentIndex, 1);
+    }
+    lectures.unshift(lecture);
+    sauvegarderLecturesEnCours(lectures.slice(0, 12));
+  }
 
   function bloquerOuverturePage(event) {
     const cible = event.target;

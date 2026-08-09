@@ -11,9 +11,16 @@ async function chargerFicheSerie() {
   const titreEl = document.getElementById("serie-titre");
   const synopsisEl = document.getElementById("serie-synopsis");
   const afficheEl = document.getElementById("serie-affiche");
+  const typeBadgeEl = document.getElementById("serie-type-badge");
+  const metaBadgeEl = document.getElementById("serie-meta-badge");
+  const genresEl = document.getElementById("serie-genres");
+  const statsEl = document.getElementById("serie-stats");
+  const countEl = document.getElementById("detail-count");
 
   if (!serieId) {
     titreEl.textContent = "Série introuvable";
+    typeBadgeEl.textContent = "Contenu";
+    metaBadgeEl.textContent = "Indisponible";
     return;
   }
 
@@ -22,6 +29,8 @@ async function chargerFicheSerie() {
 
   if (!serie) {
     titreEl.textContent = "Série introuvable";
+    typeBadgeEl.textContent = "Contenu";
+    metaBadgeEl.textContent = "Indisponible";
     return;
   }
 
@@ -29,14 +38,23 @@ async function chargerFicheSerie() {
   const estFilm = (serie.type || "").toLowerCase() === "film"
     || ((!serie.saisons || serie.saisons.length === 0) && (serie.videoUrl || "").trim() !== "");
 
-  titreEl.textContent = serie.titre;
-  document.getElementById("serie-genres").textContent = (serie.genres || []).join(" • ");
-  synopsisEl.textContent = serie.synopsis;
-  afficheEl.src = serie.miniature && serie.miniature.trim() !== ""
+  const imageUrl = serie.miniature && serie.miniature.trim() !== ""
     ? serie.miniature
     : "assets/placeholder.jpg";
-  afficheEl.alt = serie.titre;
+  const totalSaisons = Array.isArray(serie.saisons) ? serie.saisons.length : 0;
+  const totalEpisodes = Array.isArray(serie.saisons)
+    ? serie.saisons.reduce((total, saison) => total + (Array.isArray(saison.episodes) ? saison.episodes.length : 0), 0)
+    : 0;
 
+  titreEl.textContent = serie.titre;
+  typeBadgeEl.textContent = estFilm ? "Film" : "Série";
+  metaBadgeEl.textContent = estFilm ? "Disponible maintenant" : `${totalSaisons} saison${totalSaisons > 1 ? "s" : ""}`;
+  genresEl.textContent = (serie.genres || []).join(" • ");
+  statsEl.textContent = estFilm ? "Film • 1 vidéo" : `${totalEpisodes} épisode${totalEpisodes > 1 ? "s" : ""}`;
+  countEl.textContent = estFilm ? "Film disponible" : `${totalSaisons} saison${totalSaisons > 1 ? "s" : ""} • ${totalEpisodes} épisode${totalEpisodes > 1 ? "s" : ""}`;
+  synopsisEl.textContent = serie.synopsis || "Aucun synopsis disponible pour le moment.";
+  afficheEl.src = imageUrl;
+  afficheEl.alt = serie.titre;
   afficherOngletsSaisons(serie, estFilm);
   mettreAJourBoutonsSerie(serie, estFilm);
 }

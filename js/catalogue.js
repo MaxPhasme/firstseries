@@ -30,10 +30,102 @@ async function chargerCatalogue() {
     });
 
     appliquerFiltresCatalogue();
+    chargerEnCoursLecture(donnees);
   } catch (erreur) {
     console.error(erreur);
     grid.innerHTML = "<p>Erreur lors du chargement du catalogue.</p>";
   }
+}
+
+async function chargerEnCoursLecture(donnees) {
+  const section = document.getElementById("watching-section");
+  const grille = document.getElementById("watching-grid");
+  const vide = document.getElementById("watching-empty");
+
+  if (!section || !grille || !vide) return;
+
+  const lectures = lireLecturesEnCours();
+  grille.replaceChildren();
+
+  if (lectures.length === 0) {
+    vide.style.display = "block";
+    return;
+  }
+
+  vide.style.display = "none";
+
+  lectures.forEach((lecture) => {
+    const serie = (donnees.series || []).find((serieItem) => serieItem.id === lecture.serieId);
+    if (!serie) return;
+    const carte = creerCarteLectureEnCours(lecture, serie);
+    grille.appendChild(carte);
+  });
+}
+
+function creerCarteLectureEnCours(lecture, serie) {
+  const isFilm = lecture.type === "film";
+  const imageUrl = lecture.imageUrl || serie.miniature || "assets/placeholder.jpg";
+  const label = isFilm
+    ? "Film en cours"
+    : `S${lecture.saisonNumero || "?"} E${lecture.episodeNumero || "?"}`;
+  const subtitle = isFilm ? "Film en cours" : lecture.titre || serie.titre;
+  const destination = isFilm
+    ? `video.html?serie=${encodeURIComponent(serie.id)}&type=film`
+    : `video.html?serie=${encodeURIComponent(serie.id)}&saison=${encodeURIComponent(lecture.saisonId)}&episode=${encodeURIComponent(lecture.episodeId)}`;
+
+  const carte = document.createElement("div");
+  carte.className = "watching-card";
+
+  const lien = document.createElement("a");
+  lien.className = "watching-card-link";
+  lien.href = destination;
+  lien.title = lecture.serieTitle || serie.titre;
+
+  const image = document.createElement("img");
+  image.src = imageUrl;
+  image.alt = serie.titre || "Affiche du contenu";
+  image.loading = "lazy";
+  image.addEventListener("error", () => {
+    image.src = "assets/placeholder.jpg";
+  }, { once: true });
+
+  const body = document.createElement("div");
+  body.className = "watching-card-body";
+
+  const titre = document.createElement("h3");
+  titre.textContent = serie.titre || "Sans titre";
+
+  const meta = document.createElement("div");
+  meta.className = "watching-card-meta";
+  meta.textContent = label;
+
+  const sousTitre = document.createElement("p");
+  sousTitre.className = "watching-card-subtitle";
+  sousTitre.textContent = subtitle;
+
+  body.append(titre, meta, sousTitre);
+  lien.append(image, body);
+  carte.appendChild(lien);
+
+  const boutonSupprimer = document.createElement("button");
+  boutonSupprimer.type = "button";
+  boutonSupprimer.className = "watching-remove";
+  boutonSupprimer.setAttribute("aria-label", "Retirer de la liste des lectures en cours");
+  boutonSupprimer.textContent = "×";
+  boutonSupprimer.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    supprimerLectureEnCours(lecture.serieId, lecture.saisonId, lecture.episodeId, lecture.type);
+    carte.remove();
+    const grilleItems = document.querySelectorAll(".watching-card");
+    if (grilleItems.length === 0) {
+      const vide = document.getElementById("watching-empty");
+      if (vide) vide.style.display = "block";
+    }
+  });
+
+  carte.appendChild(boutonSupprimer);
+  return carte;
 }
 
 function extraireGenres(series) {

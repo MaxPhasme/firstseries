@@ -12,22 +12,37 @@
     <a href="app.html" class="logo">First<span>Series</span></a>
   </header>
 
-  <main>
-    <div class="serie-fiche">
-      <img id="serie-affiche" src="" alt="">
-      <div class="serie-infos">
+  <main class="detail-page">
+    <section class="detail-hero">
+      <div class="detail-poster-wrap">
+        <img id="serie-affiche" src="" alt="">
+      </div>
+      <div class="detail-content">
+        <div class="detail-badges">
+          <span id="serie-type-badge" class="detail-badge">Série</span>
+          <span id="serie-meta-badge" class="detail-badge secondary">Chargement...</span>
+        </div>
         <h1 id="serie-titre">Chargement...</h1>
-        <p id="serie-genres" class="serie-genres"></p>
-        <p id="serie-synopsis"></p>
+        <div class="detail-meta">
+          <span id="serie-genres" class="meta-pill"></span>
+          <span id="serie-stats" class="meta-pill muted"></span>
+        </div>
+        <p id="serie-synopsis" class="detail-synopsis"></p>
         <div class="serie-actions">
           <button id="btn-play-premier-episode" class="action-button" type="button">Lire le premier épisode</button>
           <button id="btn-share-serie" class="action-button secondary" type="button">Partager la série</button>
         </div>
       </div>
-    </div>
+    </section>
 
-    <div class="saisons-tabs" id="saisons-tabs"></div>
-    <div class="episodes-list" id="episodes-list"></div>
+    <section class="detail-section">
+      <div class="detail-section-header">
+        <h2>Épisodes & saisons</h2>
+        <span id="detail-count" class="detail-count">Chargement...</span>
+      </div>
+      <div class="saisons-tabs" id="saisons-tabs"></div>
+      <div class="episodes-list" id="episodes-list"></div>
+    </section>
   </main>
 
   <footer class="site-footer">

@@ -4,6 +4,56 @@
 // dans Firestore.
 
 const API_URL = "/api";
+const LECTURES_EN_COURS_KEY = "firstseries-in-progress";
+
+function lireLecturesEnCours() {
+  if (!window.localStorage) return [];
+  try {
+    const raw = localStorage.getItem(LECTURES_EN_COURS_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    console.warn("Impossible de lire les lectures en cours", error);
+    return [];
+  }
+}
+
+function sauvegarderLecturesEnCours(lectures) {
+  if (!window.localStorage) return;
+  localStorage.setItem(LECTURES_EN_COURS_KEY, JSON.stringify(lectures));
+}
+
+function enregistrerLectureEnCours(item) {
+  if (!item || !item.serieId) return;
+  const lectures = lireLecturesEnCours();
+  const dejaPresentIndex = lectures.findIndex((lecture) =>
+    lecture.serieId === item.serieId &&
+    lecture.saisonId === item.saisonId &&
+    lecture.episodeId === item.episodeId &&
+    lecture.type === item.type
+  );
+  if (dejaPresentIndex !== -1) {
+    lectures.splice(dejaPresentIndex, 1);
+  }
+  const sauvegarde = {
+    ...item,
+    timestamp: Date.now(),
+  };
+  lectures.unshift(sauvegarde);
+  sauvegarderLecturesEnCours(lectures.slice(0, 12));
+}
+
+function supprimerLectureEnCours(serieId, saisonId, episodeId, type) {
+  if (!window.localStorage) return;
+  const lectures = lireLecturesEnCours();
+  const suivantes = lectures.filter((lecture) =>
+    !(lecture.serieId === serieId &&
+      lecture.saisonId === saisonId &&
+      lecture.episodeId === episodeId &&
+      lecture.type === type)
+  );
+  sauvegarderLecturesEnCours(suivantes);
+}
 
 /**
  * En-têtes à joindre aux requêtes qui modifient des données (admin uniquement).
