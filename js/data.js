@@ -23,24 +23,57 @@ function sauvegarderLecturesEnCours(lectures) {
   localStorage.setItem(LECTURES_EN_COURS_KEY, JSON.stringify(lectures));
 }
 
-function enregistrerLectureEnCours(item) {
-  if (!item || !item.serieId) return;
-  const lectures = lireLecturesEnCours();
-  const dejaPresentIndex = lectures.findIndex((lecture) =>
-    lecture.serieId === item.serieId &&
-    lecture.saisonId === item.saisonId &&
-    lecture.episodeId === item.episodeId &&
-    lecture.type === item.type
-  );
-  if (dejaPresentIndex !== -1) {
-    lectures.splice(dejaPresentIndex, 1);
+function creerSlug(texte) {
+  if (!texte) return "";
+  return texte
+    .toString()
+    .normalize("NFD")
+
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9\s-]/g, "")
+    .trim()
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .toLowerCase();
+}
+
+function annoterSeriesAvecSlug(donnees) {
+  if (!donnees || !Array.isArray(donnees.series)) return;
+  const compteurs = {};
+  donnees.series.forEach((serie) => {
+    const baseSlug = creerSlug(serie.titre) || "contenu";
+    const compteur = compteurs[baseSlug] || 0;
+    serie.slug = compteur === 0 ? baseSlug : `${baseSlug}-${serie.id.slice(-6)}`;
+    compteurs[baseSlug] = compteur + 1;
+  });
+}
+
+function trouverSerieParSlug(donnees, slug) {
+  if (!donnees || !Array.isArray(donnees.series) || !slug) return null;
+  return donnees.series.find((serie) => serie.slug === slug) || null;
+}
+
+function trouverSaisonParNumero(serie, numero) {
+  if (!serie || !Array.isArray(serie.saisons)) return null;
+  return serie.saisons.find((s) => Number(s.numero) === Number(numero)) || null;
+}
+
+function trouverEpisodeParNumero(saison, numero) {
+  if (!saison || !Array.isArray(saison.episodes)) return null;
+  return saison.episodes.find((episode) => Number(episode.numero) === Number(numero)) || null;
+}
+
+function urlSerie(serie) {
+  if (!serie) return "app.html";
+  if (!serie.slug) {
+    serie.slug = creerSlug(serie.titre) || "contenu";
   }
-  const sauvegarde = {
-    ...item,
-    timestamp: Date.now(),
-  };
-  lectures.unshift(sauvegarde);
-  sauvegarderLecturesEnCours(lectures.slice(0, 12));
+  return serie.type === "film" ? `/movies/${serie.slug}` : `/series/${serie.slug}`;
+}
+
+function urlEpisode(serie, saison, episode) {
+  if (!serie || !serie.slug || !saison || !episode) return "app.html";
+  return `/series/${serie.slug}/s${saison.numero}/ep${episode.numero}`;
 }
 
 function supprimerLectureEnCours(serieId, saisonId, episodeId, type) {
@@ -72,7 +105,9 @@ function entetesAdmin() {
 async function chargerDonnees() {
   const reponse = await fetch(`${API_URL}/data`);
   if (!reponse.ok) throw new Error("Impossible de charger les données");
-  return reponse.json();
+  const donnees = await reponse.json();
+  annoterSeriesAvecSlug(donnees);
+  return donnees;
 }
 
 /* ---------- Accès / recherche (fonctions pures, inchangées) ---------- */

@@ -4,9 +4,22 @@
 let saisonActiveId = null;
 let serieActuelle = null;
 
+function parserRouteSerie() {
+  const pathname = window.location.pathname.replace(/\/+$/, "");
+  if (!pathname.startsWith("/series/")) {
+    return {};
+  }
+
+  const segments = pathname.slice("/series/".length).split("/").filter(Boolean);
+  return {
+    serieSlug: segments[0] || null,
+  };
+}
+
 async function chargerFicheSerie() {
   const params = new URLSearchParams(window.location.search);
   const serieId = params.get("id");
+  const routeInfo = parserRouteSerie();
 
   const titreEl = document.getElementById("serie-titre");
   const synopsisEl = document.getElementById("serie-synopsis");
@@ -17,7 +30,7 @@ async function chargerFicheSerie() {
   const statsEl = document.getElementById("serie-stats");
   const countEl = document.getElementById("detail-count");
 
-  if (!serieId) {
+  if (!serieId && !routeInfo.serieSlug) {
     titreEl.textContent = "Série introuvable";
     typeBadgeEl.textContent = "Contenu";
     metaBadgeEl.textContent = "Indisponible";
@@ -25,7 +38,13 @@ async function chargerFicheSerie() {
   }
 
   const donnees = await chargerDonnees();
-  const serie = trouverSerie(donnees, serieId);
+  let serie = null;
+  if (routeInfo.serieSlug) {
+    serie = trouverSerieParSlug(donnees, routeInfo.serieSlug);
+  }
+  if (!serie && serieId) {
+    serie = trouverSerie(donnees, serieId);
+  }
 
   if (!serie) {
     titreEl.textContent = "Série introuvable";
@@ -72,7 +91,7 @@ function mettreAJourBoutonsSerie(serie, estFilm = false) {
     } else {
       btnPlay.disabled = false;
       btnPlay.addEventListener("click", () => {
-        window.location.href = buildVideoUrl(serie.id, null, null, "film");
+        window.location.href = urlSerie(serie);
       });
     }
   } else {
@@ -80,14 +99,14 @@ function mettreAJourBoutonsSerie(serie, estFilm = false) {
     btnPlay.disabled = !premier;
     if (premier) {
       btnPlay.addEventListener("click", () => {
-        window.location.href = buildVideoUrl(serie.id, premier.saison.id, premier.episode.id);
+        window.location.href = urlEpisode(serie, premier.saison, premier.episode);
       });
     }
   }
 
   btnShare.disabled = false;
   btnShare.addEventListener("click", async () => {
-    const url = `${window.location.origin}${window.location.pathname}?id=${encodeURIComponent(serie.id)}`;
+    const url = `${window.location.origin}${urlSerie(serie)}`;
     const title = `Regarde ${serie.titre} sur FirstSeries.io`;
     const text = `Découvre ${(serie.type || "").toLowerCase() === "film" ? "le film" : "la série"} ${serie.titre} sur FirstSeries.io.`;
 
@@ -125,9 +144,7 @@ function obtenirPremierEpisode(serie) {
 }
 
 function buildVideoUrl(serieId, saisonId, episodeId, type) {
-  let url = `video.html?serie=${encodeURIComponent(serieId)}`;
-  if (type === "film") return `${url}&type=film`;
-  return `${url}&saison=${encodeURIComponent(saisonId)}&episode=${encodeURIComponent(episodeId)}`;
+  return "app.html";
 }
 
 function afficherOngletsSaisons(serie, estFilm = false) {
@@ -187,7 +204,7 @@ function afficherEpisodes(saison) {
     const ligne = document.createElement("div");
     ligne.className = "episode-row";
     ligne.addEventListener("click", () => {
-      window.location.href = `video.html?serie=${encodeURIComponent(serieActuelle.id)}&saison=${encodeURIComponent(saison.id)}&episode=${encodeURIComponent(episode.id)}`;
+      window.location.href = urlEpisode(serieActuelle, saison, episode);
     });
 
     ligne.innerHTML = `

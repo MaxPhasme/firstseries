@@ -2,12 +2,39 @@
 // Page de lecture : récupère serie/saison/episode dans l'URL,
 // affiche nom de série + titre d'épisode + synopsis, et génère l'iframe embed Vromov
 
+function parserUrlLecture() {
+  const pathname = window.location.pathname.replace(/\/+$/, "");
+  if (pathname.startsWith("/movies/")) {
+    return {
+      isMovieRoute: true,
+      serieSlug: pathname.slice("/movies/".length).split("/")[0],
+    };
+  }
+
+  if (pathname.startsWith("/series/")) {
+    const segments = pathname.slice("/series/".length).split("/").filter(Boolean);
+    if (segments.length >= 3 && /^s\d+$/i.test(segments[1]) && /^ep\d+$/i.test(segments[2])) {
+      return {
+        serieSlug: segments[0],
+        saisonNumero: segments[1].slice(1),
+        episodeNumero: segments[2].slice(2),
+      };
+    }
+    return {
+      serieSlug: segments[0] || null,
+    };
+  }
+
+  return {};
+}
+
 async function chargerLecteur() {
   const params = new URLSearchParams(window.location.search);
   const serieId = params.get("serie");
   const saisonId = params.get("saison");
   const episodeId = params.get("episode");
   const type = params.get("type");
+  const routeInfo = parserUrlLecture();
 
   const container = document.getElementById("player-container");
   const episodeTitreEl = document.getElementById("episode-titre");
@@ -16,37 +43,49 @@ async function chargerLecteur() {
   const prevButton = document.getElementById("btn-prev-episode");
   const nextButton = document.getElementById("btn-next-episode");
 
-  if (!serieId) {
+  if (!serieId && !routeInfo.serieSlug) {
     episodeTitreEl.textContent = "Contenu introuvable";
     return;
   }
 
   const donnees = await chargerDonnees();
-  const serie = trouverSerie(donnees, serieId);
+  let serie = null;
+  if (routeInfo.serieSlug) {
+    serie = trouverSerieParSlug(donnees, routeInfo.serieSlug);
+  }
+  if (!serie && serieId) {
+    serie = trouverSerie(donnees, serieId);
+  }
   if (!serie) {
     episodeTitreEl.textContent = "Contenu introuvable";
     return;
   }
 
-  const estFilm = type === "film" || (serie.type || "").toLowerCase() === "film";
+  const estFilm = routeInfo.isMovieRoute || type === "film" || (serie.type || "").toLowerCase() === "film";
   let episode = null;
   let saison = null;
   let saisonEpisodes = [];
   let currentIndex = -1;
 
   if (!estFilm) {
-    if (!saisonId || !episodeId) {
+    if ((!saisonId || !episodeId) && !(routeInfo.saisonNumero && routeInfo.episodeNumero)) {
       episodeTitreEl.textContent = "Épisode introuvable";
       return;
     }
 
-    saison = trouverSaison(serie, saisonId);
+    saison = routeInfo.saisonNumero ? trouverSaisonParNumero(serie, routeInfo.saisonNumero) : null;
+    if (!saison) {
+      saison = saisonId ? trouverSaison(serie, saisonId) : null;
+    }
     if (!saison) {
       episodeTitreEl.textContent = "Saison introuvable";
       return;
     }
 
-    episode = trouverEpisode(saison, episodeId);
+    episode = routeInfo.episodeNumero ? trouverEpisodeParNumero(saison, routeInfo.episodeNumero) : null;
+    if (!episode) {
+      episode = episodeId ? trouverEpisode(saison, episodeId) : null;
+    }
     if (!episode) {
       episodeTitreEl.textContent = "Épisode introuvable";
       return;
@@ -100,7 +139,7 @@ async function chargerLecteur() {
 
   episodeTitreEl.textContent = `${serie.titre} — S${saison.numero}E${episode.numero} — ${episode.titre}`;
   synopsisEl.textContent = serie.synopsis;
-  retourEl.href = `serie.html?id=${encodeURIComponent(serie.id)}`;
+  retourEl.href = urlSerie(serie);
 
   if (prevButton) {
     const previous = currentIndex > 0 ? saisonEpisodes[currentIndex - 1] : null;
@@ -146,9 +185,14 @@ async function chargerLecteur() {
 
   function buildEpisodeUrl(item) {
     if (!item) return "#";
-    const url = `video.html?serie=${encodeURIComponent(item.serieId)}`;
-    if (item.type === "film" || item.estFilm) return `${url}&type=film`;
-    return `${url}&saison=${encodeURIComponent(item.saisonId)}&episode=${encodeURIComponent(item.episodeId)}`;
+    const serieItem = trouverSerie(donnees, item.serieId);
+    if (!serieItem) return "#";
+    if (item.type === "film" || item.estFilm) {
+      return urlSerie(serieItem);
+    }
+    const saisonItem = trouverSaison(serieItem, item.saisonId);
+    const episodeItem = saisonItem ? trouverEpisode(saisonItem, item.episodeId) : null;
+    return episodeItem ? urlEpisode(serieItem, saisonItem, episodeItem) : urlSerie(serieItem);
   }
 
   function enregistrerLectureEnCours(watched) {

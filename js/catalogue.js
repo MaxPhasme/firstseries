@@ -69,9 +69,13 @@ function creerCarteLectureEnCours(lecture, serie) {
     ? "Film en cours"
     : `S${lecture.saisonNumero || "?"} E${lecture.episodeNumero || "?"}`;
   const subtitle = isFilm ? "Film en cours" : lecture.titre || serie.titre;
+  const saison = lecture.saisonId ? trouverSaison(serie, lecture.saisonId) : null;
+  const episode = saison && lecture.episodeId ? trouverEpisode(saison, lecture.episodeId) : null;
   const destination = isFilm
-    ? `video.html?serie=${encodeURIComponent(serie.id)}&type=film`
-    : `video.html?serie=${encodeURIComponent(serie.id)}&saison=${encodeURIComponent(lecture.saisonId)}&episode=${encodeURIComponent(lecture.episodeId)}`;
+    ? urlSerie(serie)
+    : episode
+      ? urlEpisode(serie, saison, episode)
+      : urlSerie(serie);
 
   const carte = document.createElement("div");
   carte.className = "watching-card";
@@ -265,9 +269,7 @@ function creerCarteSerie(serie) {
 
   const carte = document.createElement("a");
   carte.className = "video-card";
-  carte.href = isFilm
-    ? `video.html?serie=${encodeURIComponent(serie.id)}&type=film`
-    : `serie.html?id=${encodeURIComponent(serie.id)}`;
+  carte.href = urlSerie(serie);
 
   const miniature = serie.miniature && serie.miniature.trim() !== ""
     ? serie.miniature
@@ -378,10 +380,7 @@ function gererClicHero(index) {
   if (index === currentSlide) {
     const serie = heroItems[currentSlide];
     if (!serie) return;
-    const cible = isFilm(serie)
-      ? `video.html?serie=${encodeURIComponent(serie.id)}&type=film`
-      : `serie.html?id=${encodeURIComponent(serie.id)}`;
-    window.location.href = cible;
+    window.location.href = urlSerie(serie);
   } else {
     goToSlide(index);
   }
@@ -427,9 +426,7 @@ function mettreAJourInfoHero() {
   const metaText = isFilm(serie)
     ? "Film"
     : `${nbSaisons} saison${nbSaisons > 1 ? "s" : ""} • ${nbEpisodes} épisode${nbEpisodes > 1 ? "s" : ""}`;
-  const cible = isFilm(serie)
-    ? `video.html?serie=${encodeURIComponent(serie.id)}&type=film`
-    : `serie.html?id=${encodeURIComponent(serie.id)}`;
+  const cible = urlSerie(serie);
 
   heroInfo.replaceChildren();
 

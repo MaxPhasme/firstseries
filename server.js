@@ -60,6 +60,15 @@ app.get("/api/firebase-config", (req, res) => {
 app.use("/css", express.static(path.join(__dirname, "css"), { dotfiles: "deny" }));
 app.use("/js", express.static(path.join(__dirname, "js"), { dotfiles: "deny" }));
 app.use("/assets", express.static(path.join(__dirname, "assets"), { dotfiles: "deny" }));
+app.get("/movies/:slug", (req, res) => {
+  res.sendFile(path.join(__dirname, "video.html"));
+});
+app.get("/series/:slug/s:saison/ep:episode", (req, res) => {
+  res.sendFile(path.join(__dirname, "video.html"));
+});
+app.get("/series/:slug", (req, res) => {
+  res.sendFile(path.join(__dirname, "serie.html"));
+});
 const PAGES_PUBLIQUES = new Set(["index.html", "app.html", "serie.html", "video.html", "admin.html"]);
 app.get("/", (req, res) => res.sendFile(path.join(__dirname, "index.html")));
 app.get("/:page", (req, res, next) => {
@@ -182,19 +191,29 @@ function normaliserSerie(serie) {
   };
 }
 
-async function lireDonnees() {
-  initialiserFirebase();
-  const snapshot = await db.collection("content").doc("app").get();
-  if (!snapshot.exists) {
-    return { series: [], commentaires: [] };
-  }
+const DONNEES_FALLBACK = {
+  series: [],
+  commentaires: [],
+};
 
-  const donnees = snapshot.data() || {};
-  const series = Array.isArray(donnees.series) ? donnees.series : [];
-  return {
-    series: series.map(normaliserSerie),
-    commentaires: Array.isArray(donnees.commentaires) ? donnees.commentaires : [],
-  };
+async function lireDonnees() {
+  try {
+    initialiserFirebase();
+    const snapshot = await db.collection("content").doc("app").get();
+    if (!snapshot.exists) {
+      return { series: [], commentaires: [] };
+    }
+
+    const donnees = snapshot.data() || {};
+    const series = Array.isArray(donnees.series) ? donnees.series : [];
+    return {
+      series: series.map(normaliserSerie),
+      commentaires: Array.isArray(donnees.commentaires) ? donnees.commentaires : [],
+    };
+  } catch (erreur) {
+    console.error("/api/data fallback error:", erreur.message || erreur);
+    return DONNEES_FALLBACK;
+  }
 }
 
 async function ecrireDonnees(donnees) {
