@@ -573,12 +573,16 @@ app.post("/api/series/:serieId/saisons/:saisonId/episodes", verifierAdmin, async
     if (!saison) return res.status(404).json({ erreur: "Saison introuvable" });
 
     const { numero, titre, videoUrl, embedCode, vromovId } = req.body;
-    const urlVideo = (videoUrl ?? embedCode ?? vromovId ?? "").toString().trim();
+    const urlVideo = (videoUrl ?? "").toString().trim();
+    const embedHtml = (embedCode ?? "").toString().trim();
+    const vromov = (vromovId ?? "").toString().trim();
     const nouvelEpisode = {
       id: genererId("episode"),
       numero: Number(numero),
       titre: (titre || "").trim(),
       videoUrl: urlVideo,
+      embedCode: embedHtml,
+      vromovId: vromov,
     };
 
     saison.episodes.push(nouvelEpisode);
@@ -593,8 +597,8 @@ app.post("/api/series/:serieId/saisons/:saisonId/episodes", verifierAdmin, async
 
 // Modifier un épisode
 app.put("/api/series/:serieId/saisons/:saisonId/episodes/:episodeId", verifierAdmin, async (req, res) => {
-  const { numero, titre, videoUrl } = req.body;
-  if (!titre || videoUrl === undefined) {
+  const { numero, titre, videoUrl, embedCode, vromovId } = req.body;
+  if (!titre || (videoUrl === undefined && embedCode === undefined && vromovId === undefined)) {
     return res.status(400).json({ erreur: "Titre et URL vidéo requis" });
   }
 
@@ -611,7 +615,9 @@ app.put("/api/series/:serieId/saisons/:saisonId/episodes/:episodeId", verifierAd
 
     episode.numero = Number(numero);
     episode.titre = (titre || "").trim();
-    episode.videoUrl = (videoUrl || "").trim();
+    episode.videoUrl = (videoUrl || "").toString().trim();
+    episode.embedCode = (embedCode || "").toString().trim();
+    episode.vromovId = (vromovId || "").toString().trim();
     saison.episodes.sort((a, b) => a.numero - b.numero);
     await ecrireDonnees(donnees);
     res.json(episode);

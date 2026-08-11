@@ -178,8 +178,6 @@ async function chargerLecteur() {
   initCommentaires(episode.id);
 
   const videoUrl = (episode.videoUrl || "").trim();
-
-  // Fallbacks pour anciens formats
   const embedCode = (episode.embedCode || "").trim();
   const vromovId = (episode.vromovId || "").trim();
 
@@ -232,7 +230,9 @@ async function chargerLecteur() {
       return;
     }
 
-    const isDirectVideo = /\.(mp4|webm|ogg|m3u8)(\?.*)?$/i.test(videoUrl);
+    const isDirectVideo = /\.(mp4|webm|ogg|m3u8|m3u|mpd)(\?.*)?$/i.test(videoUrl.trim());
+    const hasHttpUrl = /^https?:\/\//i.test(videoUrl.trim());
+
     if (isDirectVideo) {
       container.innerHTML = `
         <video controls autoplay playsinline preload="metadata" class="video-player">
@@ -248,9 +248,14 @@ async function chargerLecteur() {
       return;
     }
 
-    container.innerHTML = `
-      <iframe src="${videoUrl}" allowfullscreen class="embed-iframe"></iframe>
-    `;
+    if (hasHttpUrl) {
+      container.innerHTML = `
+        <iframe src="${videoUrl}" allowfullscreen class="embed-iframe"></iframe>
+      `;
+      return;
+    }
+
+    container.innerHTML = "<p>URL vidéo invalide ou non prise en charge.</p>";
   }
 
   if (videoUrl) {

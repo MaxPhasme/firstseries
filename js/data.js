@@ -179,11 +179,11 @@ async function modifierSaison(donnees, serieId, saisonId, { numero }) {
   return saisonModifiee;
 }
 
-async function modifierEpisode(donnees, serieId, saisonId, episodeId, { numero, titre, videoUrl }) {
+async function modifierEpisode(donnees, serieId, saisonId, episodeId, { numero, titre, videoUrl, embedCode, vromovId }) {
   const reponse = await fetch(`${API_URL}/series/${serieId}/saisons/${saisonId}/episodes/${episodeId}`, {
     method: "PUT",
     headers: entetesAdmin(),
-    body: JSON.stringify({ numero, titre, videoUrl }),
+    body: JSON.stringify({ numero, titre, videoUrl, embedCode, vromovId }),
   });
   if (!reponse.ok) throw new Error("Erreur lors de la modification de l'épisode");
 
@@ -194,7 +194,9 @@ async function modifierEpisode(donnees, serieId, saisonId, episodeId, { numero, 
   if (episode) {
     episode.numero = episodeModifie.numero;
     episode.titre = episodeModifie.titre;
-    episode.videoUrl = episodeModifie.videoUrl;
+    episode.videoUrl = episodeModifie.videoUrl || "";
+    episode.embedCode = episodeModifie.embedCode || "";
+    episode.vromovId = episodeModifie.vromovId || "";
     saison.episodes.sort((a, b) => a.numero - b.numero);
   }
   return episodeModifie;
@@ -219,7 +221,7 @@ async function ajouterEpisode(donnees, serieId, saisonId, { numero, titre, video
   const reponse = await fetch(`${API_URL}/series/${serieId}/saisons/${saisonId}/episodes`, {
     method: "POST",
     headers: entetesAdmin(),
-    body: JSON.stringify({ numero, titre, videoUrl: videoUrl ?? embedCode ?? vromovId }),
+    body: JSON.stringify({ numero, titre, videoUrl, embedCode, vromovId }),
   });
   if (!reponse.ok) throw new Error("Erreur lors de l'ajout de l'épisode");
 
