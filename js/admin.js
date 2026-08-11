@@ -227,6 +227,94 @@ function resetFormEpisode() {
   definirEtatEditionEpisode(null);
 }
 
+
+/* ---------- TMDB ---------- */
+
+async function rechercherTMDB() {
+  const input = document.getElementById("tmdb-search-input");
+  const type = document.getElementById("tmdb-search-type").value;
+  const results = document.getElementById("tmdb-results");
+  const status = document.getElementById("tmdb-search-status");
+  const query = input.value.trim();
+
+  if (query.length < 2) {
+    status.textContent = "Saisis au moins 2 caractères.";
+    return;
+  }
+
+  status.textContent = "Recherche TMDB...";
+  results.innerHTML = "";
+
+  try {
+    const response = await fetch(`/api/tmdb/search?q=${encodeURIComponent(query)}&type=${encodeURIComponent(type)}`, {
+      headers: entetesAdmin(),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.erreur || "Recherche TMDB impossible");
+
+    if (!data.results?.length) {
+      status.textContent = "Aucun résultat.";
+      return;
+    }
+
+    status.textContent = `${data.results.length} résultat(s).`;
+    results.innerHTML = data.results.map((item) => `
+      <article class="tmdb-result">
+        <img src="${item.poster || "/assets/placeholder.jpg"}" alt="">
+        <div class="tmdb-result-info">
+          <div class="tmdb-result-title">${echapperHtml(item.titre)}</div>
+          <div class="tmdb-result-meta">${item.type === "film" ? "Film" : "Série"}${item.date ? ` • ${echapperHtml(item.date.slice(0,4))}` : ""}${item.note !== null ? ` • ⭐ ${item.note.toFixed(1)}` : ""}</div>
+          <div class="tmdb-result-overview">${echapperHtml(item.synopsis || "Aucun synopsis disponible.")}</div>
+        </div>
+        <button type="button" class="tmdb-import-btn" data-tmdb-id="${item.id}" data-tmdb-type="${item.type}">Importer</button>
+      </article>
+    `).join("");
+
+    results.querySelectorAll(".tmdb-import-btn").forEach((button) => {
+      button.addEventListener("click", () => importerTMDB(Number(button.dataset.tmdbId), button.dataset.tmdbType, button));
+    });
+  } catch (error) {
+    console.error(error);
+    status.textContent = error.message || "Erreur de recherche TMDB.";
+  }
+}
+
+async function importerTMDB(tmdbId, type, button) {
+  const status = document.getElementById("tmdb-search-status");
+  button.disabled = true;
+  button.textContent = "Import...";
+
+  try {
+    const response = await fetch("/api/tmdb/import", {
+      method: "POST",
+      headers: entetesAdmin(),
+      body: JSON.stringify({ tmdbId, type }),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.erreur || "Import TMDB impossible");
+
+    if (donneesAdmin) donneesAdmin.series.push(data);
+    remplirSelectsSeries();
+    remplirSelectCommentaireSeries();
+    status.textContent = `"${data.titre}" a été importé.`;
+    button.textContent = "Importé";
+  } catch (error) {
+    console.error(error);
+    status.textContent = error.message || "Erreur pendant l'import.";
+    button.disabled = false;
+    button.textContent = "Importer";
+  }
+}
+
+function echapperHtml(value = "") {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
   initialiserAuthentification();
 
@@ -264,6 +352,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   document.getElementById("commentaire-serie-select").addEventListener("change", remplirSelectCommentaireEpisodes);
   document.getElementById("commentaire-charger-btn").addEventListener("click", chargerCommentairesAdmin);
+  document.getElementById("tmdb-search-btn").addEventListener("click", rechercherTMDB);
+  document.getElementById("tmdb-search-input").addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      rechercherTMDB();
+    }
+  });
 
   if (sessionStorage.getItem(CLÉ_AUTH_ADMIN)) {
     donneesAdmin = await chargerDonnees();

@@ -32,6 +32,23 @@
 
   <main class="admin-main" id="admin-main">
 
+    <!-- Import TMDB -->
+    <section class="admin-panel">
+      <h2>Importer depuis TMDB</h2>
+      <p class="admin-help-text">Recherche un film ou une série. FirstSeries récupère automatiquement le titre, synopsis, affiches, genres et, pour les séries, les saisons et épisodes. Les URLs vidéo restent à renseigner séparément.</p>
+      <div class="tmdb-search-row">
+        <input type="search" id="tmdb-search-input" placeholder="Ex. Stranger Things, Interstellar..." autocomplete="off">
+        <select id="tmdb-search-type">
+          <option value="multi">Films + séries</option>
+          <option value="serie">Séries</option>
+          <option value="film">Films</option>
+        </select>
+        <button type="button" id="tmdb-search-btn">Rechercher</button>
+      </div>
+      <p id="tmdb-search-status" class="admin-help-text"></p>
+      <div id="tmdb-results" class="tmdb-results"></div>
+    </section>
+
     <!-- Ajouter un contenu -->
     <section class="admin-panel">
       <h2>Ajouter / modifier un contenu</h2>

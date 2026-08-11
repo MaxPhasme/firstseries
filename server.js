@@ -180,6 +180,8 @@ function verifierAdmin(req, res, next) {
 function normaliserSerie(serie) {
   return {
     id: serie.id,
+    tmdbId: serie.tmdbId || null,
+    tmdbType: serie.tmdbType || null,
     titre: serie.titre || "",
     synopsis: serie.synopsis || "",
     miniature: serie.miniature || "",
@@ -243,6 +245,173 @@ function trouverSaison(serie, saisonId) {
 function trouverEpisode(saison, episodeId) {
   return saison.episodes.find((e) => e.id === episodeId);
 }
+
+
+/* ---------- TMDB ---------- */
+
+function getTmdbToken() {
+  return (process.env.TMDB_API_TOKEN || process.env.TMDB_READ_ACCESS_TOKEN || process.env.TMDB_API_KEY || "").trim();
+}
+
+async function tmdbFetch(path, params = {}) {
+  const token = getTmdbToken();
+  if (!token) {
+    const error = new Error("TMDB non configuré. Ajoute TMDB_API_TOKEN dans les variables d'environnement.");
+    error.statusCode = 503;
+    throw error;
+  }
+
+  const url = new URL(`https://api.themoviedb.org/3${path}`);
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") url.searchParams.set(key, value);
+  });
+
+  const headers = {
+    accept: "application/json",
+    Authorization: `Bearer ${token}`,
+  };
+
+  const response = await fetch(url, { headers });
+  if (!response.ok) {
+    const body = await response.text().catch(() => "");
+    const error = new Error(`TMDB a répondu ${response.status}${body ? `: ${body.slice(0, 300)}` : ""}`);
+    error.statusCode = response.status === 401 ? 502 : response.status;
+    throw error;
+  }
+  return response.json();
+}
+
+function tmdbImage(path, size = "original") {
+  return path ? `https://image.tmdb.org/t/p/${size}${path}` : "";
+}
+
+function genresDepuisTmdb(items = []) {
+  return items
+    .map((genre) => genre?.name)
+    .filter(Boolean);
+}
+
+function normaliserTmdbResult(item) {
+  const isMovie = item.media_type === "movie" || item.title !== undefined;
+  return {
+    id: item.id,
+    type: isMovie ? "film" : "serie",
+    titre: isMovie ? (item.title || item.original_title || "") : (item.name || item.original_name || ""),
+    date: isMovie ? (item.release_date || "") : (item.first_air_date || ""),
+    synopsis: item.overview || "",
+    poster: tmdbImage(item.poster_path, "w500"),
+    backdrop: tmdbImage(item.backdrop_path, "w1280"),
+    note: Number.isFinite(Number(item.vote_average)) ? Number(item.vote_average) : null,
+  };
+}
+
+/* Recherche TMDB (admin uniquement pour ne pas exposer le token) */
+app.get("/api/tmdb/search", verifierAdmin, async (req, res) => {
+  try {
+    const query = (req.query.q || "").toString().trim();
+    const type = (req.query.type || "multi").toString().toLowerCase();
+
+    if (query.length < 2) {
+      return res.status(400).json({ erreur: "Saisis au moins 2 caractères." });
+    }
+
+    const endpoint = type === "film"
+      ? "/search/movie"
+      : type === "serie"
+        ? "/search/tv"
+        : "/search/multi";
+
+    const data = await tmdbFetch(endpoint, {
+      query,
+      language: "fr-FR",
+      include_adult: "false",
+      page: 1,
+    });
+
+    const results = (data.results || [])
+      .filter((item) => type === "multi" ? ["movie", "tv"].includes(item.media_type) : true)
+      .slice(0, 10)
+      .map((item) => normaliserTmdbResult({ ...item, media_type: item.media_type || (type === "film" ? "movie" : "tv") }));
+
+    res.json({ results });
+  } catch (erreur) {
+    console.error("/api/tmdb/search:", erreur);
+    res.status(erreur.statusCode || 500).json({ erreur: erreur.message || "Recherche TMDB impossible" });
+  }
+});
+
+/* Import des métadonnées TMDB + saisons/épisodes. Aucune source vidéo tierce n'est récupérée ici. */
+app.post("/api/tmdb/import", verifierAdmin, async (req, res) => {
+  const tmdbId = Number(req.body.tmdbId);
+  const type = (req.body.type || "").toString().toLowerCase();
+
+  if (!Number.isInteger(tmdbId) || tmdbId <= 0 || !["film", "serie"].includes(type)) {
+    return res.status(400).json({ erreur: "tmdbId et type valides requis." });
+  }
+
+  try {
+    const details = type === "film"
+      ? await tmdbFetch(`/movie/${tmdbId}`, { language: "fr-FR" })
+      : await tmdbFetch(`/tv/${tmdbId}`, { language: "fr-FR" });
+
+    const nouvelleSerie = {
+      id: genererId("serie"),
+      tmdbId,
+      tmdbType: type === "film" ? "movie" : "tv",
+      titre: type === "film"
+        ? (details.title || details.original_title || "")
+        : (details.name || details.original_name || ""),
+      synopsis: details.overview || "",
+      miniature: tmdbImage(details.backdrop_path, "w1280"),
+      genres: genresDepuisTmdb(details.genres),
+      affiche: false,
+      type,
+      videoUrl: "",
+      saisons: [],
+    };
+
+    if (type === "serie") {
+      const seasonNumbers = (details.seasons || [])
+        .map((season) => Number(season.season_number))
+        .filter((number) => Number.isInteger(number) && number > 0);
+
+      for (const seasonNumber of seasonNumbers) {
+        try {
+          const seasonDetails = await tmdbFetch(`/tv/${tmdbId}/season/${seasonNumber}`, { language: "fr-FR" });
+          nouvelleSerie.saisons.push({
+            id: genererId("saison"),
+            numero: seasonNumber,
+            tmdbSeasonNumber: seasonNumber,
+            poster: tmdbImage(seasonDetails.poster_path, "w500"),
+            episodes: (seasonDetails.episodes || []).map((episode) => ({
+              id: genererId("episode"),
+              tmdbId: episode.id,
+              numero: Number(episode.episode_number),
+              titre: episode.name || `Épisode ${episode.episode_number}`,
+              synopsis: episode.overview || "",
+              miniature: tmdbImage(episode.still_path, "w500"),
+              videoUrl: "",
+              sources: [],
+            })),
+          });
+        } catch (seasonError) {
+          console.warn(`TMDB saison ${seasonNumber} ignorée:`, seasonError.message);
+        }
+      }
+
+      nouvelleSerie.saisons.sort((a, b) => a.numero - b.numero);
+    }
+
+    const donnees = await lireDonnees();
+    donnees.series.push(nouvelleSerie);
+    await ecrireDonnees(donnees);
+
+    res.status(201).json(nouvelleSerie);
+  } catch (erreur) {
+    console.error("/api/tmdb/import:", erreur);
+    res.status(erreur.statusCode || 500).json({ erreur: erreur.message || "Import TMDB impossible" });
+  }
+});
 
 /* ---------- Routes ---------- */
 
