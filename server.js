@@ -3,14 +3,20 @@ const express = require("express");
 const compression = require("compression");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
+const dns = require("dns");
 const { Pool } = require("pg");
 const fs = require("fs");
 const path = require("path");
 const app = express();
 const PORT = process.env.PORT || 3000;
+dns.setDefaultResultOrder("ipv4first");
 app.disable("x-powered-by");
 const tmdbSearchCache = new Map();
 const TMDB_SEARCH_TTL_MS = 10 * 60 * 1000;
+const tmdbRankingsCache = new Map();
+const TMDB_RANKINGS_TTL_MS = 15 * 60 * 1000;
+const TMDB_RANKINGS_FAILURE_TTL_MS = 60 * 1000;
+let importTmdbEnCours = false;
 
 app.use((req, res, next) => {
   res.set({
@@ -58,7 +64,7 @@ function initialiserPostgres() {
     throw new Error("DATABASE_URL manquant");
   }
   if (!pgPool) {
-    const requiresSSL = process.env.DATABASE_URL.includes("render.com") || process.env.FORCE_DB_SSL === "1";
+    const requiresSSL = process.env.DATABASE_URL.includes("supabase") || process.env.FORCE_DB_SSL === "1";
     
     pgPool = new Pool({
       connectionString: process.env.DATABASE_URL,
@@ -590,6 +596,127 @@ app.get("/api/search-public", async (req, res) => {
   } catch (erreur) {
     console.error("/api/search-public:", erreur);
     res.status(erreur.statusCode || 500).json({ erreur: erreur.message || "Recherche impossible" });
+  }
+});
+
+app.get("/api/tmdb/rankings", async (req, res) => {
+  try {
+    const requestedTypes = (req.query.types || "popular,top-rated,upcoming")
+      .toString()
+      .split(",")
+      .map((type) => type.trim().toLowerCase())
+      .filter((type) => ["popular", "top-rated", "upcoming"].includes(type));
+    const types = [...new Set(requestedTypes)];
+    if (!types.length) return res.status(400).json({ erreur: "Classement TMDB invalide" });
+
+    const cacheKey = types.join(",");
+    const cached = tmdbRankingsCache.get(cacheKey);
+    if (cached && Date.now() - cached.time < TMDB_RANKINGS_TTL_MS) {
+      return res.json({ rankings: cached.value });
+    }
+    if (cached?.failed && Date.now() - cached.time < TMDB_RANKINGS_FAILURE_TTL_MS) {
+      return res.json({ rankings: {}, unavailable: true });
+    }
+
+    const endpoints = {
+      popular: "/movie/popular",
+      "top-rated": "/movie/top_rated",
+      upcoming: "/movie/upcoming",
+    };
+    const rankings = {};
+    for (const type of types) {
+      const data = await tmdbFetch(endpoints[type], {
+        language: "fr-FR",
+        region: "FR",
+        page: 1,
+      });
+      rankings[type] = (data.results || [])
+        .filter((item) => item && item.id && item.poster_path)
+        .slice(0, 20)
+        .map((item) => ({ ...normaliserTmdbResult({ ...item, media_type: "movie" }), tmdbId: item.id }));
+    }
+
+    tmdbRankingsCache.set(cacheKey, { time: Date.now(), value: rankings });
+    res.json({ rankings });
+  } catch (erreur) {
+    tmdbRankingsCache.set(cacheKey, { time: Date.now(), value: {}, failed: true });
+    console.warn("Classements TMDB temporairement indisponibles:", erreur.message || erreur);
+    res.json({ rankings: {}, unavailable: true });
+  }
+});
+
+app.post("/api/admin/import-popular-films", verifierAdmin, async (req, res) => {
+  if (importTmdbEnCours) return res.status(409).json({ erreur: "Un import TMDB est déjà en cours." });
+  importTmdbEnCours = true;
+  try {
+    const data = await tmdbFetch("/movie/popular", {
+      language: "fr-FR",
+      region: "FR",
+      page: 1,
+    });
+    const offset = Math.max(0, Number(req.query.offset) || 0);
+    const limit = Math.min(5, Math.max(1, Number(req.query.limit) || 5));
+    const films = (data.results || [])
+      .filter((item) => item && item.id && item.poster_path)
+      .slice(offset, offset + limit);
+    const imported = [];
+    const existing = [];
+    const errors = [];
+
+    for (const film of films) {
+      try {
+        const result = await importerTmdbDansCatalogue(film.id, "film");
+        if (result.inserted) imported.push(result.item);
+        else existing.push(result.item);
+        await new Promise((resolve) => setTimeout(resolve, 350));
+      } catch (error) {
+        errors.push({ tmdbId: film.id, titre: film.title || film.original_title || "Sans titre", message: error.message || String(error) });
+      }
+    }
+
+    res.json({ requested: films.length, imported: imported.length, existing: existing.length, errors, items: [...imported, ...existing] });
+  } catch (error) {
+    console.error("/api/admin/import-popular-films:", error);
+    res.status(error.statusCode || 502).json({ erreur: error.message || "Import des films populaires impossible" });
+  } finally {
+    importTmdbEnCours = false;
+  }
+});
+
+app.post("/api/admin/import-popular-series", verifierAdmin, async (req, res) => {
+  if (importTmdbEnCours) return res.status(409).json({ erreur: "Un import TMDB est déjà en cours." });
+  importTmdbEnCours = true;
+  try {
+    const data = await tmdbFetch("/tv/popular", {
+      language: "fr-FR",
+      page: 1,
+    });
+    const offset = Math.max(0, Number(req.query.offset) || 0);
+    const limit = Math.min(5, Math.max(1, Number(req.query.limit) || 5));
+    const series = (data.results || [])
+      .filter((item) => item && item.id && item.poster_path)
+      .slice(offset, offset + limit);
+    const imported = [];
+    const existing = [];
+    const errors = [];
+
+    for (const serie of series) {
+      try {
+        const result = await importerTmdbDansCatalogue(serie.id, "serie");
+        if (result.inserted) imported.push(result.item);
+        else existing.push(result.item);
+        await new Promise((resolve) => setTimeout(resolve, 350));
+      } catch (error) {
+        errors.push({ tmdbId: serie.id, titre: serie.name || serie.original_name || "Sans titre", message: error.message || String(error) });
+      }
+    }
+
+    res.json({ requested: series.length, imported: imported.length, existing: existing.length, errors, items: [...imported, ...existing] });
+  } catch (error) {
+    console.error("/api/admin/import-popular-series:", error);
+    res.status(error.statusCode || 502).json({ erreur: error.message || "Import des séries populaires impossible" });
+  } finally {
+    importTmdbEnCours = false;
   }
 });
 

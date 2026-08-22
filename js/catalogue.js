@@ -118,11 +118,36 @@ async function chargerCatalogue() {
     if (loadingEl) loadingEl.remove();
 
     const rangees = [];
+    const filmsDisponibles = (donnees.series || []).filter((item) => isFilm(item));
+    const filmsParTmdbId = new Map(
+      filmsDisponibles
+        .filter((item) => Number.isInteger(Number(item.tmdbId)) && Number(item.tmdbId) > 0)
+        .map((item) => [Number(item.tmdbId), item])
+    );
+
+    try {
+      const rankingsResponse = await fetch('/api/tmdb/rankings?types=popular,top-rated,upcoming', { cache: 'no-store' });
+      if (!rankingsResponse.ok) throw new Error('Classements TMDB indisponibles');
+      const rankings = (await rankingsResponse.json()).rankings || {};
+      const rankingRows = [
+        ['Top films populaires', 'popular', 'row-films-populaires'],
+        ['Top films les mieux notés', 'top-rated', 'row-films-notes'],
+        ['Films bientôt disponibles', 'upcoming', 'row-films-a-venir'],
+      ];
+
+      rankingRows.forEach(([titre, key, id]) => {
+        const items = (rankings[key] || [])
+          .map((item) => filmsParTmdbId.get(Number(item.tmdbId)))
+          .filter(Boolean);
+        if (items.length) rangees.push({ titre, items, id });
+      });
+    } catch (rankingError) {
+    }
     
     const featured = (donnees.series || []).filter(s => s.affiche).slice(0, 20);
     if (featured.length) rangees.push({ titre: 'À la une', items: featured, id: 'row-featured' });
 
-    let films = (donnees.series || []).filter(s => isFilm(s)).slice(0, 200);
+    let films = filmsDisponibles.slice(0, 200);
     films.forEach((film) => {
       const id = Number(film.tmdbId);
       const meta = metaMap[id];
@@ -135,7 +160,9 @@ async function chargerCatalogue() {
       return da - db;
     });
     films = films.slice(0, 20);
-    if (films.length) rangees.push({ titre: 'Films populaires', items: films, id: 'row-films' });
+    if (films.length && !rangees.some((rangee) => rangee.id === 'row-films-populaires')) {
+      rangees.push({ titre: 'Films du catalogue', items: films, id: 'row-films' });
+    }
 
     genresDisponibles.slice(0, 6).forEach((genre) => {
       const items = (donnees.series || []).filter(s => (s.genres || []).includes(genre)).slice(0, 20);
@@ -164,6 +191,10 @@ async function chargerCatalogue() {
 const EMOJI_PAR_TITRE_RANGEE = {
   "À la une": "🔥",
   "Films populaires": "🎬",
+  "Top films populaires": "🔥",
+  "Top films les mieux notés": "🏆",
+  "Films bientôt disponibles": "📅",
+  "Films du catalogue": "🎬",
 };
 const EMOJI_PAR_GENRE = {
   "Action": "💥",

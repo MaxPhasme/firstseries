@@ -19,11 +19,22 @@
   navigation: auto;
 }
 
+body {
+  position: relative;
+  isolation: isolate;
+  background: #000 !important;
+}
+
+body > * {
+  position: relative;
+  z-index: 1;
+}
+
 body::before,
 body::after {
   content: "";
   position: fixed;
-  z-index: -1;
+  z-index: 0;
   border-radius: 50%;
   filter: blur(90px);
   opacity: 0.28;
@@ -211,6 +222,12 @@ main {
   max-width: 1280px;
   width: 100%;
   margin: 0 auto;
+}
+
+main.detail-page {
+  max-width: 980px;
+  padding-inline: 0;
+  box-sizing: border-box;
 }
 
 .section-title {
@@ -1329,6 +1346,7 @@ input:focus-visible {
 }
 
 .detail-hero {
+  box-sizing: border-box;
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -1343,8 +1361,9 @@ input:focus-visible {
   -webkit-backdrop-filter: blur(20px) saturate(160%);
   box-shadow: 0 16px 32px rgba(0, 0, 0, 0.18);
   overflow: hidden;
-  max-width: 980px;
-  margin: 0 auto;
+  width: 100%;
+  max-width: none;
+  margin-inline: 0;
 }
 
 .detail-poster-wrap {
@@ -1438,6 +1457,7 @@ input:focus-visible {
 }
 
 .detail-section {
+  box-sizing: border-box;
   background: var(--bg-card);
   backdrop-filter: blur(20px) saturate(160%);
   -webkit-backdrop-filter: blur(20px) saturate(160%);
@@ -1446,14 +1466,23 @@ input:focus-visible {
   border-radius: 0;
   padding: 0.85rem;
   box-shadow: 0 16px 32px rgba(0, 0, 0, 0.18);
-  max-width: 980px;
-  margin: 0 auto;
+  width: 100%;
+  max-width: none;
+  margin-inline: 0;
+}
+
+.detail-hero + .detail-section {
+  margin-top: -1px;
+  border-top: none;
+  border-left-color: var(--border);
+  border-right-color: var(--border);
 }
 
 #episodes-section {
-  border-radius: 0;
-  border-bottom: none;
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  border-bottom: 1px solid var(--border);
   box-shadow: none;
+  overflow: hidden;
 }
 
 .detail-section-header {
@@ -2766,10 +2795,14 @@ main,.container,.app-wrapper,.content,.page-wrapper{
 
 html, body{
   background-color:#000 !important;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260' viewBox='0 0 260 260'%3E%3Cg transform='rotate(-45 130 130)' opacity='0.14'%3E%3Cline x1='10' y1='130' x2='85' y2='130' stroke='%2322D3EE' stroke-width='2'/%3E%3Ctext x='95' y='142' font-size='34' font-family='Arial' font-weight='bold' fill='%2322D3EE'%3EFSS%3C/text%3E%3Cline x1='170' y1='130' x2='250' y2='130' stroke='%2322D3EE' stroke-width='2'/%3E%3C/g%3E%3C/svg%3E") !important;
-  background-repeat:repeat !important;
-  background-size:260px 260px !important;
+  background-image:none !important;
 }
 main, .container, .wrapper, .page-wrapper, .app-wrapper{
   background: transparent !important;
+}
+
+body::before,
+body::after {
+  opacity: 0.2;
+  filter: blur(120px);
 }

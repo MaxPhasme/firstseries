@@ -8,8 +8,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/css/style.css?v=6">
-  <link rel="stylesheet" href="/css/admin.css?v=4">
+  <link rel="stylesheet" href="/css/style.css?v=10">
+  <link rel="stylesheet" href="/css/admin.css?v=5">
 </head>
 <body>
 <header class="site-header">
@@ -46,6 +46,14 @@
           <option value="film">Films</option>
         </select>
         <button type="button" id="tmdb-search-btn">Rechercher</button>
+      </div>
+      <div class="form-actions">
+        <button type="button" id="import-popular-films-btn" class="admin-primary">Importer les 20 films populaires</button>
+        <span id="import-popular-films-status" class="admin-help-text"></span>
+      </div>
+      <div class="form-actions">
+        <button type="button" id="import-popular-series-btn" class="admin-primary">Importer les 20 séries populaires</button>
+        <span id="import-popular-series-status" class="admin-help-text"></span>
       </div>
       <p id="tmdb-search-status" class="admin-help-text"></p>
       <div id="tmdb-results" class="tmdb-results"></div>

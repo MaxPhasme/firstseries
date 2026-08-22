@@ -304,6 +304,80 @@ async function importerTMDB(tmdbId, type, button) {
   }
 }
 
+async function importerFilmsPopulaires() {
+  const button = document.getElementById("import-popular-films-btn");
+  const status = document.getElementById("import-popular-films-status");
+  if (!button || !status) return;
+
+  button.disabled = true;
+  status.textContent = "Recherche et import des films populaires...";
+
+  try {
+    let total = 0;
+    for (let offset = 0; offset < 20; offset += 5) {
+      const response = await fetch(`/api/admin/import-popular-films?offset=${offset}&limit=5`, {
+        method: "POST",
+        headers: entetesAdmin(),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.erreur || "Import des films populaires impossible");
+      total += data.imported;
+
+      if (donneesAdmin) {
+        const seriesParId = new Map((donneesAdmin.series || []).map((item) => [item.id, item]));
+        (data.items || []).forEach((item) => seriesParId.set(item.id, item));
+        donneesAdmin.series = Array.from(seriesParId.values());
+        remplirSelectsSeries();
+        remplirSelectCommentaireSeries();
+      }
+      status.textContent = `${Math.min(offset + 5, 20)}/20 films traités...`;
+    }
+    status.textContent = `${total} film(s) ajouté(s) sur 20.`;
+  } catch (error) {
+    console.error(error);
+    status.textContent = error.message || "Erreur pendant l'import.";
+  } finally {
+    button.disabled = false;
+  }
+}
+
+async function importerSeriesPopulaires() {
+  const button = document.getElementById("import-popular-series-btn");
+  const status = document.getElementById("import-popular-series-status");
+  if (!button || !status) return;
+
+  button.disabled = true;
+  status.textContent = "Recherche et import des séries populaires...";
+
+  try {
+    let total = 0;
+    for (let offset = 0; offset < 20; offset += 5) {
+      const response = await fetch(`/api/admin/import-popular-series?offset=${offset}&limit=5`, {
+        method: "POST",
+        headers: entetesAdmin(),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.erreur || "Import des séries populaires impossible");
+      total += data.imported;
+
+      if (donneesAdmin) {
+        const seriesParId = new Map((donneesAdmin.series || []).map((item) => [item.id, item]));
+        (data.items || []).forEach((item) => seriesParId.set(item.id, item));
+        donneesAdmin.series = Array.from(seriesParId.values());
+        remplirSelectsSeries();
+        remplirSelectCommentaireSeries();
+      }
+      status.textContent = `${Math.min(offset + 5, 20)}/20 séries traitées...`;
+    }
+    status.textContent = `${total} série(s) ajoutée(s) sur 20.`;
+  } catch (error) {
+    console.error(error);
+    status.textContent = error.message || "Erreur pendant l'import.";
+  } finally {
+    button.disabled = false;
+  }
+}
+
 async function rafraichirPostersTMDB() {
   const button = document.getElementById("refresh-tmdb-posters-btn");
   const status = document.getElementById("refresh-tmdb-posters-status");
@@ -418,6 +492,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("commentaire-serie-select").addEventListener("change", remplirSelectCommentaireEpisodes);
   document.getElementById("commentaire-charger-btn").addEventListener("click", chargerCommentairesAdmin);
   document.getElementById("tmdb-search-btn").addEventListener("click", rechercherTMDB);
+  document.getElementById("import-popular-films-btn").addEventListener("click", importerFilmsPopulaires);
+  document.getElementById("import-popular-series-btn").addEventListener("click", importerSeriesPopulaires);
   document.getElementById("refresh-tmdb-posters-btn").addEventListener("click", rafraichirPostersTMDB);
   document.getElementById("assign-platforms-btn").addEventListener("click", attribuerPlateformesTMDB);
   document.getElementById("tmdb-search-input").addEventListener("keydown", (event) => {
