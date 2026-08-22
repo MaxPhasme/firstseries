@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin — FirstSeries Streaming</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css?v=6">
+  <link rel="stylesheet" href="/css/admin.css?v=4">
+</head>
+<body>
+<header class="site-header">
+    <span class="logo">First<span>Series</span></span> <small class="admin-badge">ADMIN</small></span>
+    <div class="admin-header-actions">
+      <a href="/app.html" class="admin-link-btn">Retour au site</a>
+      <button type="button" id="admin-logout" class="admin-logout" hidden>Se déconnecter</button>
+    </div>
+  </header>
+
+  <div id="admin-auth" class="admin-auth" hidden>
+    <div class="admin-auth-card">
+      <h2>Connexion à l’admin</h2>
+      <p>Entrez le MDP</p>
+      <form id="admin-login-form" class="admin-auth-form">
+        <label for="admin-password-input">MDP</label>
+        <input type="password" id="admin-password-input" required>
+        <button type="submit">Login</button>
+        <p id="admin-auth-error" class="admin-auth-error" role="alert"></p>
+      </form>
+    </div>
+  </div>
+
+  <main class="admin-main" id="admin-main">
+
+    <section class="admin-panel">
+      <h2>Importer depuis TMDB</h2>
+      <p class="admin-help-text">Importer films depuis TMBD</p>
+      <div class="tmdb-search-row">
+        <input type="search" id="tmdb-search-input" placeholder="Ex. Stranger Things, Interstellar..." autocomplete="off">
+        <select id="tmdb-search-type">
+          <option value="multi">Films & séries</option>
+          <option value="serie">Séries</option>
+          <option value="film">Films</option>
+        </select>
+        <button type="button" id="tmdb-search-btn">Rechercher</button>
+      </div>
+      <p id="tmdb-search-status" class="admin-help-text"></p>
+      <div id="tmdb-results" class="tmdb-results"></div>
+    </section>
+
+    <section class="admin-panel">
+      <h2>Posters TMDB</h2>
+      <p class="admin-help-text">Met à jour tous les posters depuis de TMDB</p>
+      <div class="form-actions">
+        <button type="button" id="refresh-tmdb-posters-btn" class="admin-primary">UPDATE</button>
+        <span id="refresh-tmdb-posters-status" class="admin-help-text" style="margin-left:12px"></span>
+      </div>
+    </section>
+
+    <section class="admin-panel">
+      <h2>Plateformes</h2>
+      <p class="admin-help-text">Attribue à chaque contenu les plateformes disponibles selon TMDB.</p>
+      <div class="form-actions">
+        <button type="button" id="assign-platforms-btn" class="admin-primary">Attribuer les plateformes</button>
+        <span id="assign-platforms-status" class="admin-help-text"></span>
+      </div>
+    </section>
+
+    <section class="admin-panel">
+      <h2>Nettoyage</h2>
+      <p class="admin-help-text">Supp les doubles et sans liens valide</p>
+      <div class="form-actions">
+        <button type="button" id="cleanup-content-btn" class="admin-danger">Nettoyer doublons et contenus sans lien</button>
+        <span id="cleanup-content-status" class="admin-help-text" style="margin-left:12px"></span>
+      </div>
+    </section>
+
+    <section class="admin-panel">
+      <h2>Catalogue</h2>
+      <p class="admin-help-text">Vider tout le contenu du catalogue</p>
+      <div class="form-actions">
+        <button type="button" id="clear-catalog-btn" class="admin-danger">Vider tout le catalogue</button>
+        <span id="clear-catalog-status" class="admin-help-text" style="margin-left:12px"></span>
+      </div>
+    </section>
+
+    <section class="admin-panel">
+      <h2>Vidzy — Récupération des liens</h2>
+      <p class="admin-help-text">MAJ Auto Liens</p>
+      <div class="form-actions">
+        <button type="button" id="regen-vidzy-btn" class="admin-primary">Régénérer tous les liens Vidzy</button>
+        <span id="regen-vidzy-status" class="admin-help-text" style="margin-left:12px"></span>
+      </div>
+    </section>
+
+    <section class="admin-panel">
+      <h2>Importer un fichier CSV</h2>
+      <p class="admin-help-text">Imp films depuis fichier</p>
+      <div class="form-actions">
+        <input type="file" id="csv-file-input" accept=".csv" />
+        <button type="button" id="csv-import-btn" class="admin-primary">Importer le CSV</button>
+        <span id="csv-import-status" class="admin-help-text" style="margin-left:12px"></span>
+      </div>
+    </section>
+
+    <section class="admin-panel">
+      <h2>Ajouter / modifier un contenu</h2>
+      <div class="admin-selector-group">
+        <label for="serie-recherche-input">Rechercher une série par nom</label>
+        <input type="search" id="serie-recherche-input" placeholder="Ex. Breaking Bad, Stranger Things..." autocomplete="off">
+        <label for="serie-modifier-select">Série à modifier</label>
+        <div class="admin-selector-actions">
+          <select id="serie-modifier-select"></select>
+          <button type="button" id="serie-charger-btn" class="btn-secondary">Charger</button>
+        </div>
+        <p id="serie-selection-info" class="admin-help-text">Choisis une série pour modif.</p>
+      </div>
+      <form id="form-serie">
+        <label>Titre
+          <input type="text" id="serie-titre-input" required>
+        </label>
+        <label>Synopsis
+          <textarea id="serie-synopsis-input" rows="3" required></textarea>
+        </label>
+        <label>URL de la miniature (optionnel)
+          <input type="text" id="serie-miniature-input">
+        </label>
+        <fieldset class="form-fieldset">
+          <legend>Type de contenu</legend>
+          <label class="radio-label">
+            <input type="radio" name="serie-type" value="serie" checked>
+            Série
+          </label>
+          <label class="radio-label">
+            <input type="radio" name="serie-type" value="film">
+            Film
+          </label>
+        </fieldset>
+        <div id="serie-video-url-field" hidden>
+          <label>URL de la vidéo
+            <input type="url" id="serie-video-url-input" placeholder="https://...">
+          </label>
+        </div>
+        <fieldset class="form-fieldset">
+          <legend>Genres</legend>
+          <div id="serie-genres-group" class="genres-group"></div>
+        </fieldset>
+        <label class="checkbox-label">
+          <input type="checkbox" id="serie-affiche-checkbox">
+          Série à l'affiche (rangée "À la une")
+        </label>
+        <label class="checkbox-label">
+          <input type="checkbox" id="serie-carrousel-checkbox">
+          Dans le carrousel de la page d'accueil
+        </label>
+        <div class="form-actions">
+          <button type="submit" id="form-serie-submit">Ajouter la série</button>
+          <button type="button" class="btn-cancel" id="form-serie-annuler" hidden>Annuler</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="admin-panel">
+      <h2>Ajouter une saison</h2>
+      <form id="form-saison">
+        <label>Série
+          <select id="saison-serie-select" required></select>
+        </label>
+        <label>Numéro de saison
+          <input type="number" id="saison-numero-input" min="1" required>
+        </label>
+        <div class="form-actions">
+          <button type="submit" id="form-saison-submit">Ajouter la saison</button>
+          <button type="button" class="btn-cancel" id="form-saison-annuler" hidden>Annuler</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="admin-panel">
+      <h2>Ajouter un épisode</h2>
+      <form id="form-episode">
+        <label>Série
+          <select id="episode-serie-select" required></select>
+        </label>
+        <label>Saison
+          <select id="episode-saison-select" required></select>
+        </label>
+        <label>Numéro d'épisode
+          <input type="number" id="episode-numero-input" min="1" required>
+        </label>
+        <label>Titre de l'épisode
+          <input type="text" id="episode-titre-input" required>
+        </label>
+        <label>URL de la vidéo
+          <input type="url" id="episode-video-url-input" required>
+        </label>
+        <div class="form-actions">
+          <button type="submit" id="form-episode-submit">Ajouter l'épisode</button>
+          <button type="button" class="btn-cancel" id="form-episode-annuler" hidden>Annuler</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="admin-panel admin-panel-large">
+      <h2>Contenu actuel</h2>
+      <div class="admin-content-selector">
+        <label for="contenu-recherche-input">Rechercher une série par nom</label>
+        <input type="search" id="contenu-recherche-input" placeholder="Ex. The Office, Arcane..." autocomplete="off">
+        <label>Série
+          <select id="contenu-serie-select"></select>
+        </label>
+        <label>Saison
+          <select id="contenu-saison-select"></select>
+        </label>
+        <label>Épisode
+          <select id="contenu-episode-select"></select>
+        </label>
+        <div class="form-actions">
+          <button type="button" id="contenu-charger-btn">Charger pour modifier</button>
+          <button type="button" id="contenu-reset-btn">Réinitialiser</button>
+        </div>
+        <div class="form-actions admin-content-actions">
+          <button type="button" id="contenu-supprimer-serie-btn" class="btn-supprimer">Supprimer la série</button>
+          <button type="button" id="contenu-supprimer-saison-btn" class="btn-supprimer">Supprimer la saison</button>
+          <button type="button" id="contenu-supprimer-episode-btn" class="btn-supprimer">Supprimer l’épisode</button>
+        </div>
+        <div id="contenu-list" class="admin-content-list"></div>
+        <p id="contenu-selection-info" class="admin-help-text">Choisis une série, puis une saison, puis un épisode à modifier.</p>
+      </div>
+    </section>
+
+    <section class="admin-panel admin-panel-large">
+      <h2>Commentaires</h2>
+      <div class="admin-content-selector">
+        <label>Série
+          <select id="commentaire-serie-select"></select>
+        </label>
+        <label>Épisode
+          <select id="commentaire-episode-select"></select>
+        </label>
+        <div class="form-actions">
+          <button type="button" id="commentaire-charger-btn">Charger les commentaires</button>
+        </div>
+        <p id="commentaire-selection-info" class="admin-help-text">Choisis une série et un épisode ou laisse l’épisode vide pour les films.</p>
+      </div>
+      <div id="commentaires-admin-list" class="admin-commentaires-list"></div>
+    </section>
+
+  </main>
+  
+<div>
+  <h2>Récupérer un lien vidéo</h2>
+  <input type="text" id="videoQuery" placeholder="Entrez le nom de la vidéo ou le titre..." />
+  <button onclick="fetchVideoLink()">Récupérer le lien</button>
+</div>
+
+<script>
+  async function fetchVideoLink() {
+    const query = document.getElementById('videoQuery').value;
+    const response = await fetch('/api/get-video-link', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ query }),
+    });
+
+    const data = await response.json();
+    if (data.success) {
+      alert(`Lien vidéo trouvé : ${data.videoLink}`);
+      // Vous pouvez ajouter le lien à une liste ou le stocker dans une base de données
+    } else {
+      alert(data.error);
+    }
+  }
+</script>
+
+  <script src="/js/data.js?v=5"></script>
+  <script src="/js/admin.js?v=3"></script>
+</body>
+</html>

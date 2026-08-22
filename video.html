@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<script defer src="https://cloud.umami.is/script.js" data-website-id="b5afd5fe-b4c7-48dc-a3d2-17f2710abf94"></script>
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lecteur — FirstSeries Streaming</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css?v=7">
+  <link rel="stylesheet" href="/css/auth.css?v=3">
+</head>
+<body>
+<header class="site-header">
+    <a href="/app.html" class="logo">First<span>Series</span></a>
+    <div class="header-right" id="header-auth-zone">
+      <button type="button" class="auth-open-btn" data-auth-open>Compte</button>
+      <div class="user-menu" data-user-menu hidden>
+        <button type="button" class="user-menu-button" data-user-menu-button>
+          <span class="user-avatar" data-user-avatar>?</span>
+          <span class="user-name" data-user-name></span>
+        </button>
+        <div class="user-menu-panel" data-user-menu-panel hidden>
+          <div class="user-menu-email" data-user-menu-email></div>
+          <button type="button" data-logout-button>Se déconnecter</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div id="lang-switch" class="lang-switch" hidden>
+      <button type="button" class="lang-btn" data-lang="vf">VF</button>
+      <button type="button" class="lang-btn" data-lang="vostfr">VOSTFR</button>
+    </div>
+    <div id="player-container" class="player-container"></div>
+
+    <div class="video-infos">
+      <a id="retour-serie" class="retour-serie" href="#">&larr; Retour au contenu</a>
+      <div class="player-nav-buttons">
+        <button id="btn-prev-episode" class="action-button secondary" type="button">Épisode précédent</button>
+        <button id="btn-next-episode" class="action-button" type="button">Épisode suivant</button>
+      </div>
+      <h2 id="episode-titre">Chargement...</h2>
+      <p id="serie-synopsis-player"></p>
+    </div>
+
+    <section class="commentaires" id="commentaires" hidden>
+      <h3 class="commentaires-titre">
+        Commentaires <span id="commentaires-compteur"></span>
+      </h3>
+
+      <form class="commentaire-form" id="form-commentaire">
+        <input
+          type="text"
+          id="commentaire-pseudo"
+          class="commentaire-input"
+          placeholder="Ton pseudo (optionnel)"
+          maxlength="30"
+        >
+        <textarea
+          id="commentaire-texte"
+          class="commentaire-textarea"
+          rows="3"
+          maxlength="1000"
+          placeholder="Ton avis sur cet épisode..."
+        ></textarea>
+        <div class="commentaire-form-bas">
+          <p class="commentaire-erreur" id="commentaire-erreur"></p>
+          <button type="submit" id="commentaire-envoyer">Publier</button>
+        </div>
+      </form>
+
+      <div class="commentaires-liste" id="commentaires-liste"></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+  <p>ALPHA · FirstSeries Streaming</p>
+  </footer>
+
+  <script src="/js/data.js?v=5"></script>
+  <script src="/js/commentaires.js?v=2"></script>
+  <script src="/js/extractM3u8.js?v=2"></script>
+  <script src="/js/player.js?v=2"></script>
+  <script src="/js/user-auth.js?v=4"></script>
+</body>
+</html>

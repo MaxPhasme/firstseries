@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<script defer src="https://cloud.umami.is/script.js" data-website-id="b5afd5fe-b4c7-48dc-a3d2-17f2710abf94"></script>
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-WK2QPG54');</script>
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Série — FirstSeries Streaming</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css?v=7">
+  <link rel="stylesheet" href="/css/auth.css?v=3">
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WK2QPG54"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  <header class="site-header">
+    <div class="header-left">
+      <a href="/app.html" class="logo">First<span>Series</span></a>
+    </div>
+    <div class="header-right" id="header-auth-zone">
+      <button type="button" class="auth-open-btn" data-auth-open>Compte</button>
+      <div class="user-menu" data-user-menu hidden>
+        <button type="button" class="user-menu-button" data-user-menu-button>
+          <span class="user-avatar" data-user-avatar>?</span>
+          <span class="user-name" data-user-name></span>
+        </button>
+        <div class="user-menu-panel" data-user-menu-panel hidden>
+          <div class="user-menu-email" data-user-menu-email></div>
+          <button type="button" data-logout-button>Se déconnecter</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="detail-page">
+    <section class="detail-hero">
+      <div class="detail-poster-wrap">
+        <img id="serie-affiche" src="" alt="">
+      </div>
+      <div class="detail-content">
+        <div class="detail-badges">
+          <span id="serie-type-badge" class="detail-badge">Série</span>
+          <span id="serie-meta-badge" class="detail-badge secondary">Chargement...</span>
+        </div>
+        <h1 id="serie-titre">Chargement...</h1>
+        <div class="detail-meta">
+          <span id="serie-genres" class="meta-pill"></span>
+          <span id="serie-stats" class="meta-pill muted"></span>
+          <span id="serie-date" class="meta-pill muted"></span>
+        </div>
+        <p id="serie-synopsis" class="detail-synopsis"></p>
+        <div class="serie-actions">
+          <button id="btn-play-premier-episode" class="action-button" type="button">Lire le premier épisode</button>
+          <button id="btn-share-serie" class="action-button secondary" type="button">Partager la série</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="detail-section" id="episodes-section">
+      <div class="detail-section-header">
+        <h2>Épisodes & saisons</h2>
+        <span id="detail-count" class="detail-count">Chargement...</span>
+      </div>
+      <div class="saisons-tabs" id="saisons-tabs"></div>
+      <div class="episodes-list" id="episodes-list"></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>ALPHA · FirstSeries Streaming</p>
+  </footer>
+
+  <script src="/js/data.js?v=5"></script>
+  <script src="/js/serie.js?v=2"></script>
+  <script src="/js/prefetch.js?v=2"></script>
+  <script src="/js/user-auth.js?v=4"></script>
+</body>
+</html>

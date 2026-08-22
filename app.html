@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<script defer src="https://cloud.umami.is/script.js" data-website-id="b5afd5fe-b4c7-48dc-a3d2-17f2710abf94"></script>
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FirstSeries Streaming</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="/css/style.css?v=9">
+  <link rel="stylesheet" href="/css/auth.css?v=4">
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="header-left">
+      <a href="/app.html" class="logo">First<span>Series</span></a>
+    </div>
+
+    <div class="header-center">
+    
+
+      <div class="type-filter-section">
+        <button id="filter-all" type="button" class="filter-chip active">Tous</button>
+        <button id="filter-series" type="button" class="filter-chip">Séries</button>
+        <button id="filter-films" type="button" class="filter-chip">Films</button>
+      </div>
+      <div class="genre-filter-section">
+        <div class="genre-dropdown">
+          <button id="genre-dropdown-button" type="button" class="genre-dropdown-btn" aria-label="Sélectionner un genre" aria-haspopup="true">
+            Genre
+          </button>
+          <div class="genre-dropdown-panel">
+            <div id="genre-filter-list" class="genre-filter-list">Chargement des genres…</div>
+            <div class="genre-dropdown-actions">
+              <button id="clear-genre-filters" type="button" class="filter-chip filter-clear">Voir tout</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="header-right" id="header-auth-zone">
+      <button type="button" class="auth-open-btn" data-auth-open>LogIn</button>
+      <div class="user-menu" data-user-menu hidden>
+        <button type="button" class="user-menu-button" data-user-menu-button>
+          <span class="user-avatar" data-user-avatar>?</span>
+          <span class="user-name" data-user-name></span>
+        </button>
+        <div class="user-menu-panel" data-user-menu-panel hidden>
+          <div class="user-menu-email" data-user-menu-email></div>
+          <button type="button" data-logout-button>Se déconnecter</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section id="hero-slider" class="hero-slider">
+      <div class="hero-carousel">
+        <div id="hero-track" class="hero-track"></div>
+      </div>
+      <div class="hero-nav">
+        <button id="hero-prev" type="button" class="hero-nav-btn hero-nav-prev" aria-label="Élément précédent">❮</button>
+        <div id="hero-dots" class="hero-dots"></div>
+        <button id="hero-next" type="button" class="hero-nav-btn hero-nav-next" aria-label="Élément suivant">❯</button>
+      </div>
+      <div id="hero-info" class="hero-info"></div>
+    </section>
+
+    <div id="search-overlay" class="search-overlay" aria-hidden="true"></div>
+    <section class="search-bar-section">
+      <div class="search-bar-box">
+        <span class="search-bar-icon" aria-hidden="true">⌕</span>
+        <input type="search" id="site-search-input" class="search-bar-input" placeholder="Rechercher un film, une série..." autocomplete="off" spellcheck="false">
+        <button id="site-search-clear" type="button" class="search-bar-clear" aria-label="Effacer la recherche">✕</button>
+      </div>
+    </section>
+
+    <section id="watching-section" class="watching-section">
+      <div class="watching-section-header">
+        <h2 class="section-title">En cours de lecture</h2>
+      </div>
+      <div id="watching-grid" class="watching-grid"></div>
+      <p id="watching-empty" class="watching-empty">Aucun contenu en cours de lecture pour le moment.</p>
+    </section>
+
+
+
+    <div class="catalogue-section">
+      <h2 class="section-title">Catalogue</h2>
+      <div id="rows-container" class="rows-container">
+        <div id="loading-msg" class="skeleton-row">
+          <div class="skeleton-card"></div><div class="skeleton-card"></div><div class="skeleton-card"></div>
+          <div class="skeleton-card"></div><div class="skeleton-card"></div><div class="skeleton-card"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+    <footer class="site-footer">
+    <p>ALPHA · FirstSeries Streaming</p>
+  </footer>
+
+  <script src="/js/data.js?v=5"></script>
+  <script src="/js/catalogue.js?v=5"></script>
+  <script src="/js/main.js?v=6"></script>
+  <script src="/js/prefetch.js?v=2"></script>
+  <script src="/js/user-auth.js?v=5"></script>
+</body>
+</html>
