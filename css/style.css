@@ -2074,6 +2074,12 @@ body.search-is-active .search-bar-box {
   transform: translateY(-1px);
 }
 
+.search-bar-input:focus,
+.search-bar-input:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
 .search-bar-icon {
   flex: 0 0 auto;
   width: 48px;
